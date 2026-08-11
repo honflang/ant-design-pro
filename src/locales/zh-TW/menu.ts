@@ -49,4 +49,12 @@ export default {
   'menu.editor.flow': '流程編輯器',
   'menu.editor.mind': '腦圖編輯器',
   'menu.editor.koni': '拓撲編輯器',
+    'menu.pricing-billing': '定價與計費',
+    'menu.pricing-billing.dashboard': '儀表盤',
+    'menu.pricing-billing.pricing': '定價配置',
+    'menu.pricing-billing.billing': '計費管理',
+    'menu.pricing-billing.regional': '區域配置',
+    'menu.pricing-billing.regional.tax': '稅務配置',
+    'menu.pricing-billing.invoice': '發票管理',
+    'menu.pricing-billing.approvals': '審批管理',
 };

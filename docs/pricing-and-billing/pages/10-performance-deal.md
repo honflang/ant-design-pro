@@ -1,6 +1,6 @@
 # 10 — 交易绩效监控 Deal Performance Monitoring
 
-**路由**：`/performance/deal`  
+**路由**：`/pricing-billing/performance/deal`  
 **组件路径**：`src/pages/performance/deal/index.tsx`  
 **菜单 i18n key**：`menu.performance.deal`  
 **所属用例**：UC-3（第 5 点）、绩效管理需求、客户管理需求
@@ -144,7 +144,7 @@ POST   /api/performance/deals/:id/review-request
 `dealEndDate` 在当前日期 30 天以内时，`status = 'EXPIRING_SOON'`，列表中显示 Warning 图标。
 
 ### 发起复查
-RM 点击 "Request Review" 后，Deal 状态改为 `UNDER_REVIEW`，同时在 `/pricing/approval` 中生成一条 `type=DEAL` 的待审批记录。
+147:RM 点击 "Request Review" 后，Deal 状态改为 `UNDER_REVIEW`，同时在 `/pricing-billing/pricing/approval` 中生成一条 `type=DEAL` 的待审批记录。
 
 ---
 

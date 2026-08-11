@@ -282,18 +282,59 @@ export default [
   },
   {
     path: '/regional',
-    name: 'regional',
-    icon: 'global',
+    redirect: '/pricing-billing/regional/tax',
+  },
+  {
+    path: '/pricing-billing',
+    name: 'pricing-billing',
+    icon: 'bank',
     routes: [
       {
-        path: '/regional',
-        redirect: '/regional/tax',
+        path: '/pricing-billing',
+        redirect: '/pricing-billing/dashboard',
       },
       {
-        name: 'tax',
-        icon: 'audit',
-        path: '/regional/tax',
-        component: './regional/tax',
+        path: '/pricing-billing/dashboard',
+        name: 'dashboard',
+        icon: 'dashboard',
+        component: './pricing-billing/dashboard',
+      },
+      {
+        path: '/pricing-billing/regional',
+        name: 'regional',
+        icon: 'global',
+        routes: [
+          {
+            path: '/pricing-billing/regional',
+            redirect: '/pricing-billing/regional/tax',
+          },
+          {
+            name: 'tax',
+            icon: 'audit',
+            path: '/pricing-billing/regional/tax',
+            component: './pricing-billing/regional/tax',
+          },
+        ],
+      },
+      {
+        path: '/pricing-billing/pricing',
+        redirect: '/pricing-billing/regional/tax',
+      },
+      {
+        path: '/pricing-billing/billing',
+        redirect: '/pricing-billing/regional/tax',
+      },
+      {
+        path: '/pricing-billing/billing/invoice',
+        redirect: '/pricing-billing/regional/tax',
+      },
+      {
+        path: '/pricing-billing/billing/run/:runId',
+        redirect: '/pricing-billing/regional/tax',
+      },
+      {
+        path: '/pricing-billing/approvals/:approvalId',
+        redirect: '/pricing-billing/regional/tax',
       },
     ],
   },

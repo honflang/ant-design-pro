@@ -22,25 +22,25 @@
 
 ```
 /pricing-billing               ← 系统总览仪表盘
-/pricing                       ← 定价管理（父菜单）
-  /pricing/price-book          ← 价格手册
-  /pricing/rules               ← 定价规则
-  /pricing/simulation          ← 定价模拟工具
-  /pricing/approval            ← 审批工作流
-/billing                       ← 计费管理（父菜单）
-  /billing/configuration       ← 计费配置
-  /billing/run                 ← 计费执行
-  /billing/invoice             ← 发票管理
-/performance                   ← 绩效管理（父菜单）
-  /performance/revenue         ← 收入追踪
-  /performance/deal            ← 交易绩效监控
-/customer                      ← 客户管理（父菜单）
-  /customer/360                ← 客户 360 全景视图
-  /customer/portfolio          ← 客户组合管理
-/regional                      ← 区域配置（父菜单）
-  /regional/tax                ← 税务配置 ✅ 已实现
-/reports                       ← 数据分析（父菜单）
-  /reports/analytics           ← 分析报表
+/pricing-billing/pricing        ← 定价管理（父菜单）
+  /pricing-billing/pricing/price-book     ← 价格手册
+  /pricing-billing/pricing/rules          ← 定价规则
+  /pricing-billing/pricing/simulation     ← 定价模拟工具
+  /pricing-billing/pricing/approval       ← 审批工作流
+/pricing-billing/billing        ← 计费管理（父菜单）
+  /pricing-billing/billing/configuration  ← 计费配置
+  /pricing-billing/billing/run            ← 计费执行
+  /pricing-billing/billing/invoice        ← 发票管理
+/pricing-billing/performance    ← 绩效管理（父菜单）
+  /pricing-billing/performance/revenue    ← 收入追踪
+  /pricing-billing/performance/deal       ← 交易绩效监控
+/pricing-billing/customer       ← 客户管理（父菜单）
+  /pricing-billing/customer/360           ← 客户 360 全景视图
+  /pricing-billing/customer/portfolio     ← 客户组合管理
+/pricing-billing/regional       ← 区域配置（父菜单）
+  /pricing-billing/regional/tax           ← 税务配置 ✅ 已实现
+/pricing-billing/reports        ← 数据分析（父菜单）
+  /pricing-billing/reports/analytics      ← 分析报表
 ```
 
 路由对应的 `config/routes.ts` 配置片段：
@@ -53,64 +53,64 @@
   component: './pricing-billing/dashboard',
 },
 {
-  path: '/pricing',
+  path: '/pricing-billing/pricing',
   name: 'pricing',
   icon: 'dollarCircle',
   routes: [
-    { path: '/pricing', redirect: '/pricing/price-book' },
-    { name: 'price-book',   icon: 'book',        path: '/pricing/price-book',   component: './pricing/price-book' },
-    { name: 'rules',        icon: 'setting',     path: '/pricing/rules',        component: './pricing/rules' },
-    { name: 'simulation',   icon: 'experiment',  path: '/pricing/simulation',   component: './pricing/simulation' },
-    { name: 'approval',     icon: 'checkCircle', path: '/pricing/approval',     component: './pricing/approval' },
+    { path: '/pricing-billing/pricing', redirect: '/pricing-billing/pricing/price-book' },
+    { name: 'price-book', icon: 'book', path: '/pricing-billing/pricing/price-book', component: './pricing/price-book' },
+    { name: 'rules', icon: 'setting', path: '/pricing-billing/pricing/rules', component: './pricing/rules' },
+    { name: 'simulation', icon: 'experiment', path: '/pricing-billing/pricing/simulation', component: './pricing/simulation' },
+    { name: 'approval', icon: 'checkCircle', path: '/pricing-billing/pricing/approval', component: './pricing/approval' },
   ],
 },
 {
-  path: '/billing',
+  path: '/pricing-billing/billing',
   name: 'billing',
   icon: 'fileText',
   routes: [
-    { path: '/billing', redirect: '/billing/configuration' },
-    { name: 'configuration', icon: 'tool',        path: '/billing/configuration', component: './billing/configuration' },
-    { name: 'run',           icon: 'playCircle',  path: '/billing/run',           component: './billing/run' },
-    { name: 'invoice',       icon: 'fileInvoice', path: '/billing/invoice',       component: './billing/invoice' },
+    { path: '/pricing-billing/billing', redirect: '/pricing-billing/billing/configuration' },
+    { name: 'configuration', icon: 'tool', path: '/pricing-billing/billing/configuration', component: './billing/configuration' },
+    { name: 'run', icon: 'playCircle', path: '/pricing-billing/billing/run', component: './billing/run' },
+    { name: 'invoice', icon: 'fileInvoice', path: '/pricing-billing/billing/invoice', component: './billing/invoice' },
   ],
 },
 {
-  path: '/performance',
+  path: '/pricing-billing/performance',
   name: 'performance',
   icon: 'lineChart',
   routes: [
-    { path: '/performance', redirect: '/performance/revenue' },
-    { name: 'revenue', icon: 'rise',      path: '/performance/revenue', component: './performance/revenue' },
-    { name: 'deal',    icon: 'fund',      path: '/performance/deal',    component: './performance/deal' },
+    { path: '/pricing-billing/performance', redirect: '/pricing-billing/performance/revenue' },
+    { name: 'revenue', icon: 'rise', path: '/pricing-billing/performance/revenue', component: './performance/revenue' },
+    { name: 'deal', icon: 'fund', path: '/pricing-billing/performance/deal', component: './performance/deal' },
   ],
 },
 {
-  path: '/customer',
+  path: '/pricing-billing/customer',
   name: 'customer',
   icon: 'team',
   routes: [
-    { path: '/customer', redirect: '/customer/360' },
-    { name: '360',       icon: 'radar-chart', path: '/customer/360',       component: './customer/360' },
-    { name: 'portfolio', icon: 'wallet',      path: '/customer/portfolio', component: './customer/portfolio' },
+    { path: '/pricing-billing/customer', redirect: '/pricing-billing/customer/360' },
+    { name: '360', icon: 'radar-chart', path: '/pricing-billing/customer/360', component: './customer/360' },
+    { name: 'portfolio', icon: 'wallet', path: '/pricing-billing/customer/portfolio', component: './customer/portfolio' },
   ],
 },
 {
-  path: '/regional',
+  path: '/pricing-billing/regional',
   name: 'regional',
   icon: 'global',
   routes: [
-    { path: '/regional', redirect: '/regional/tax' },
-    { name: 'tax', icon: 'audit', path: '/regional/tax', component: './regional/tax' }, // ✅ 已实现
+    { path: '/pricing-billing/regional', redirect: '/pricing-billing/regional/tax' },
+    { name: 'tax', icon: 'audit', path: '/pricing-billing/regional/tax', component: './regional/tax' },
   ],
 },
 {
-  path: '/reports',
+  path: '/pricing-billing/reports',
   name: 'reports',
   icon: 'barChart',
   routes: [
-    { path: '/reports', redirect: '/reports/analytics' },
-    { name: 'analytics', icon: 'pieChart', path: '/reports/analytics', component: './reports/analytics' },
+    { path: '/pricing-billing/reports', redirect: '/pricing-billing/reports/analytics' },
+    { name: 'analytics', icon: 'pieChart', path: '/pricing-billing/reports/analytics', component: './reports/analytics' },
   ],
 },
 ```
@@ -187,19 +187,19 @@ src/pages/<module>/<page>/
 | # | 页面 | 路由 | 文档链接 | 状态 |
 |---|------|------|---------|------|
 | 01 | 系统总览仪表盘 | `/pricing-billing` | [01-dashboard.md](./pages/01-dashboard.md) | 待实现 |
-| 02 | 价格手册 | `/pricing/price-book` | [02-pricing-price-book.md](./pages/02-pricing-price-book.md) | 待实现 |
-| 03 | 定价规则 | `/pricing/rules` | [03-pricing-rules.md](./pages/03-pricing-rules.md) | 待实现 |
-| 04 | 定价模拟工具 | `/pricing/simulation` | [04-pricing-simulation.md](./pages/04-pricing-simulation.md) | 待实现 |
-| 05 | 审批工作流 | `/pricing/approval` | [05-pricing-approval.md](./pages/05-pricing-approval.md) | 待实现 |
-| 06 | 计费配置 | `/billing/configuration` | [06-billing-config.md](./pages/06-billing-config.md) | 待实现 |
-| 07 | 计费执行 | `/billing/run` | [07-billing-run.md](./pages/07-billing-run.md) | 待实现 |
-| 08 | 发票管理 | `/billing/invoice` | [08-billing-invoice.md](./pages/08-billing-invoice.md) | 待实现 |
-| 09 | 收入追踪 | `/performance/revenue` | [09-performance-revenue.md](./pages/09-performance-revenue.md) | 待实现 |
-| 10 | 交易绩效监控 | `/performance/deal` | [10-performance-deal.md](./pages/10-performance-deal.md) | 待实现 |
-| 11 | 客户 360 视图 | `/customer/360` | [11-customer-360.md](./pages/11-customer-360.md) | 待实现 |
-| 12 | 客户组合管理 | `/customer/portfolio` | [12-customer-portfolio.md](./pages/12-customer-portfolio.md) | 待实现 |
-| 13 | 税务配置 | `/regional/tax` | [13-regional-tax.md](./pages/13-regional-tax.md) | ✅ 已实现 |
-| 14 | 分析报表 | `/reports/analytics` | [14-reports-analytics.md](./pages/14-reports-analytics.md) | 待实现 |
+| 02 | 价格手册 | `/pricing-billing/pricing/price-book` | [02-pricing-price-book.md](./pages/02-pricing-price-book.md) | 待实现 |
+| 03 | 定价规则 | `/pricing-billing/pricing/rules` | [03-pricing-rules.md](./pages/03-pricing-rules.md) | 待实现 |
+| 04 | 定价模拟工具 | `/pricing-billing/pricing/simulation` | [04-pricing-simulation.md](./pages/04-pricing-simulation.md) | 待实现 |
+| 05 | 审批工作流 | `/pricing-billing/pricing/approval` | [05-pricing-approval.md](./pages/05-pricing-approval.md) | 待实现 |
+| 06 | 计费配置 | `/pricing-billing/billing/configuration` | [06-billing-config.md](./pages/06-billing-config.md) | 待实现 |
+| 07 | 计费执行 | `/pricing-billing/billing/run` | [07-billing-run.md](./pages/07-billing-run.md) | 待实现 |
+| 08 | 发票管理 | `/pricing-billing/billing/invoice` | [08-billing-invoice.md](./pages/08-billing-invoice.md) | 待实现 |
+| 09 | 收入追踪 | `/pricing-billing/performance/revenue` | [09-performance-revenue.md](./pages/09-performance-revenue.md) | 待实现 |
+| 10 | 交易绩效监控 | `/pricing-billing/performance/deal` | [10-performance-deal.md](./pages/10-performance-deal.md) | 待实现 |
+| 11 | 客户 360 视图 | `/pricing-billing/customer/360` | [11-customer-360.md](./pages/11-customer-360.md) | 待实现 |
+| 12 | 客户组合管理 | `/pricing-billing/customer/portfolio` | [12-customer-portfolio.md](./pages/12-customer-portfolio.md) | 待实现 |
+| 13 | 税务配置 | `/pricing-billing/regional/tax` | [13-regional-tax.md](./pages/13-regional-tax.md) | ✅ 已实现 |
+| 14 | 分析报表 | `/pricing-billing/reports/analytics` | [14-reports-analytics.md](./pages/14-reports-analytics.md) | 待实现 |
 
 ---
 
@@ -211,7 +211,7 @@ Customer (客户)
   │     └── BillingConfig (计费配置)
   │           └── BillingRun (计费执行)
   │                 └── Invoice (发票)
-  │                       └── TaxRule (税务规则) ← /regional/tax
+  │                       └── TaxRule (税务规则) ← /pricing-billing/regional/tax
   └── Deal (交易)
         ├── DealSimulation (模拟)
         ├── ApprovalWorkflow (审批)

@@ -37,7 +37,7 @@ import {
   Typography,
 } from 'antd';
 import React, { useCallback, useRef, useState } from 'react';
-import type { TaxRule } from '../../../../mock/taxConfig';
+import type { TaxRule } from '../../../../../mock/taxConfig';
 
 const { Text } = Typography;
 

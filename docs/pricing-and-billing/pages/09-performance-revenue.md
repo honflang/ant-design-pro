@@ -1,6 +1,6 @@
 # 09 — 收入追踪 Revenue Tracking
 
-**路由**：`/performance/revenue`  
+**路由**：`/pricing-billing/performance/revenue`  
 **组件路径**：`src/pages/performance/revenue/index.tsx`  
 **菜单 i18n key**：`menu.performance.revenue`  
 **所属用例**：UC-3（第 5 点）、绩效管理需求

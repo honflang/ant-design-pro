@@ -73,4 +73,65 @@ export default {
   'pages.searchTable.tenThousand': '0000',
   'pages.searchTable.batchDeletion': 'Penghapusan batch',
   'pages.searchTable.batchApproval': 'Persetujuan batch',
+
+  'pages.dashboard.title': 'Wholesale Banking Pricing & Billing Platform',
+  'pages.dashboard.subTitle':
+    'Centralized pricing and billing across APAC markets',
+  'pages.dashboard.refresh': 'Refresh',
+  'pages.dashboard.export': 'Export',
+  'pages.dashboard.msg.exported': 'Dashboard data exported',
+  'pages.dashboard.table.empty': 'No data',
+
+  'pages.dashboard.stat.markets': 'APAC Markets',
+  'pages.dashboard.stat.clients': 'Active Clients',
+  'pages.dashboard.stat.products': 'Products',
+  'pages.dashboard.stat.monthlyBilling': 'Monthly Billing',
+  'pages.dashboard.stat.pendingApprovals': 'Pending Approvals',
+
+  'pages.dashboard.section.marketCoverage': 'Market Coverage',
+  'pages.dashboard.section.revenueSummary': 'Revenue Summary (30 Days)',
+  'pages.dashboard.section.recentBilling': 'Recent Billing Runs',
+  'pages.dashboard.section.pendingApprovals': 'Pending Approvals',
+  'pages.dashboard.section.architecture': 'Platform Architecture Flow',
+
+  'pages.dashboard.col.market': 'Market',
+  'pages.dashboard.col.billingCycle': 'Billing Cycle',
+  'pages.dashboard.col.totalAmount': 'Total Amount',
+  'pages.dashboard.col.status': 'Status',
+  'pages.dashboard.col.completedAt': 'Completed At',
+  'pages.dashboard.col.type': 'Type',
+  'pages.dashboard.col.subject': 'Subject',
+  'pages.dashboard.col.requestedBy': 'Requested By',
+  'pages.dashboard.col.urgency': 'Urgency',
+  'pages.dashboard.col.actions': 'Actions',
+
+  'pages.dashboard.status.completed': 'Completed',
+  'pages.dashboard.status.inProgress': 'In Progress',
+  'pages.dashboard.status.failed': 'Failed',
+
+  'pages.dashboard.urgency.high': 'High',
+  'pages.dashboard.urgency.medium': 'Medium',
+  'pages.dashboard.urgency.low': 'Low',
+
+  'pages.dashboard.market.status.normal': 'Normal',
+  'pages.dashboard.market.status.attention': 'Attention',
+  'pages.dashboard.market.status.alert': 'Alert',
+
+  'pages.dashboard.quick.pricing': 'Pricing Configuration',
+  'pages.dashboard.quick.billing': 'Billing Management',
+  'pages.dashboard.quick.tax': 'Tax Configuration',
+
+  'pages.dashboard.action.viewDetails': 'View Details',
+  'pages.dashboard.action.rerun': 'Re-run',
+  'pages.dashboard.action.cancel': 'Cancel',
+  'pages.dashboard.action.retry': 'Retry',
+  'pages.dashboard.action.approve': 'Approve',
+  'pages.dashboard.action.reject': 'Reject',
+  'pages.dashboard.action.requestMoreInfo': 'Request More Info',
+
+  'pages.dashboard.arch.step.pricing': 'Pricing Config',
+  'pages.dashboard.arch.step.billing': 'Billing Engine',
+  'pages.dashboard.arch.step.tax': 'Tax Determination',
+  'pages.dashboard.arch.step.invoice': 'Invoice Generation',
+  'pages.dashboard.arch.step.delivery': 'Client Delivery',
 };

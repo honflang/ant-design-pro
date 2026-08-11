@@ -1,6 +1,6 @@
 # 14 — 分析报表 Analytics & Reporting
 
-**路由**：`/reports/analytics`  
+**路由**：`/pricing-billing/reports/analytics`  
 **组件路径**：`src/pages/reports/analytics/index.tsx`  
 **菜单 i18n key**：`menu.reports.analytics`  
 **所属用例**：数据分析需求、集中化平台需求

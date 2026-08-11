@@ -195,4 +195,64 @@ export default {
   'pages.regional.tax.calc.treatmentInfo':
     '处理方式：{treatment} · 计算方法：{method}',
   'pages.regional.tax.calc.taxInclusive': ' · 税额已含于计费金额中。',
+
+  'pages.dashboard.title': '批发银行定价与计费平台',
+  'pages.dashboard.subTitle': '跨 APAC 市场集中化定价与计费管理',
+  'pages.dashboard.refresh': '刷新',
+  'pages.dashboard.export': '导出',
+  'pages.dashboard.msg.exported': '仪表盘数据导出成功',
+  'pages.dashboard.table.empty': '暂无数据',
+
+  'pages.dashboard.stat.markets': 'APAC 市场数',
+  'pages.dashboard.stat.clients': '活跃客户数',
+  'pages.dashboard.stat.products': '产品数',
+  'pages.dashboard.stat.monthlyBilling': '月度计费金额',
+  'pages.dashboard.stat.pendingApprovals': '待审批事项',
+
+  'pages.dashboard.section.marketCoverage': '市场覆盖',
+  'pages.dashboard.section.revenueSummary': '收入概览（近 30 天）',
+  'pages.dashboard.section.recentBilling': '近期计费 Runs',
+  'pages.dashboard.section.pendingApprovals': '待审批事项',
+  'pages.dashboard.section.architecture': '平台架构流程',
+
+  'pages.dashboard.col.market': '市场',
+  'pages.dashboard.col.billingCycle': '计费周期',
+  'pages.dashboard.col.totalAmount': '金额',
+  'pages.dashboard.col.status': '状态',
+  'pages.dashboard.col.completedAt': '完成时间',
+  'pages.dashboard.col.type': '类型',
+  'pages.dashboard.col.subject': '主题',
+  'pages.dashboard.col.requestedBy': '申请人',
+  'pages.dashboard.col.urgency': '紧急度',
+  'pages.dashboard.col.actions': '操作',
+
+  'pages.dashboard.status.completed': '已完成',
+  'pages.dashboard.status.inProgress': '进行中',
+  'pages.dashboard.status.failed': '失败',
+
+  'pages.dashboard.urgency.high': '高',
+  'pages.dashboard.urgency.medium': '中',
+  'pages.dashboard.urgency.low': '低',
+
+  'pages.dashboard.market.status.normal': '正常',
+  'pages.dashboard.market.status.attention': '需关注',
+  'pages.dashboard.market.status.alert': '告警',
+
+  'pages.dashboard.quick.pricing': '定价配置',
+  'pages.dashboard.quick.billing': '计费管理',
+  'pages.dashboard.quick.tax': '税务配置',
+
+  'pages.dashboard.action.viewDetails': '查看详情',
+  'pages.dashboard.action.rerun': '重新执行',
+  'pages.dashboard.action.cancel': '取消',
+  'pages.dashboard.action.retry': '重试',
+  'pages.dashboard.action.approve': '批准',
+  'pages.dashboard.action.reject': '驳回',
+  'pages.dashboard.action.requestMoreInfo': '补充信息',
+
+  'pages.dashboard.arch.step.pricing': '定价配置',
+  'pages.dashboard.arch.step.billing': '计费引擎',
+  'pages.dashboard.arch.step.tax': '税务判定',
+  'pages.dashboard.arch.step.invoice': '发票生成',
+  'pages.dashboard.arch.step.delivery': '客户交付',
 };

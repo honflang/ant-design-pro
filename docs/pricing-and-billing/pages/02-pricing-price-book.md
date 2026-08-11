@@ -1,6 +1,6 @@
 # 02 — 价格手册 Price Book
 
-**路由**：`/pricing/price-book`  
+**路由**：`/pricing-billing/pricing/price-book`  
 **组件路径**：`src/pages/pricing/price-book/index.tsx`  
 **菜单 i18n key**：`menu.pricing.price-book`  
 **所属用例**：UC-2 灵活定价配置

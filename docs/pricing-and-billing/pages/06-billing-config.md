@@ -1,6 +1,6 @@
 # 06 — 计费配置 Billing Configuration
 
-**路由**：`/billing/configuration`  
+**路由**：`/pricing-billing/billing/configuration`  
 **组件路径**：`src/pages/billing/configuration/index.tsx`  
 **菜单 i18n key**：`menu.billing.configuration`  
 **所属用例**：UC-2（第 4 点）、UC-3（第 6、7、8 点）

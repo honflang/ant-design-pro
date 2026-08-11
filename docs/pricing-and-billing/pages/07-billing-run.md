@@ -1,6 +1,6 @@
 # 07 — 计费执行 Billing Run
 
-**路由**：`/billing/run`  
+**路由**：`/pricing-billing/billing/run`  
 **组件路径**：`src/pages/billing/run/index.tsx`  
 **菜单 i18n key**：`menu.billing.run`  
 **所属用例**：UC-2、UC-3（第 7、8 点：费用重算、追溯交易）
@@ -74,7 +74,7 @@ Run 详情 Drawer：
 | 触发新 Run | `Modal` + `ProForm` | 选择 Market、Period、类型（普通/重算） |
 | Run 详情 | `Drawer` + ProDescriptions + 内嵌 ProTable | 明细按客户/产品展开 |
 | 追溯交易列表 | 嵌于详情 Drawer 的子 ProTable | 展示 backdate 补计情况 |
-| 生成发票按钮 | `Button` → 跳转 `/billing/invoice` | 从 Run 直接发起开票 |
+| 生成发票按钮 | `Button` → 跳转 `/pricing-billing/billing/invoice` | 从 Run 直接发起开票 |
 
 ---
 

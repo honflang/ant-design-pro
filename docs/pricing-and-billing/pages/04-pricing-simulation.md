@@ -1,6 +1,6 @@
 # 04 — 定价模拟工具 Pricing Simulation
 
-**路由**：`/pricing/simulation`  
+**路由**：`/pricing-billing/pricing/simulation`  
 **组件路径**：`src/pages/pricing/simulation/index.tsx`  
 **菜单 i18n key**：`menu.pricing.simulation`  
 **所属用例**：UC-2（第 4 点）、UC-3（第 2 点）
@@ -122,7 +122,7 @@ POST   /api/pricing/simulations              → SimulationResult
 # 保存草稿
 POST   /api/pricing/simulations/draft        → SimulationResult
 
-# 提交审批（保存并跳转至 /pricing/approval）
+# 提交审批（保存并跳转至 /pricing-billing/pricing/approval）
 POST   /api/pricing/simulations/:id/submit   → { approvalRequestId: string }
 
 # 历史记录
@@ -153,7 +153,7 @@ estimatedMarginPercent = adjustedRevenue / baseRevenue × 假设毛利率 (80%)
 - Scenario C：输入折扣 - 5%（较紧）
 
 ### 提交审批
-提交后跳转到 `/pricing/approval`，并高亮新建的审批申请。
+提交后跳转到 `/pricing-billing/pricing/approval`，并高亮新建的审批申请。
 
 ---
 

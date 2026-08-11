@@ -1,6 +1,6 @@
 # 12 — 客户组合管理 Customer Portfolio
 
-**路由**：`/customer/portfolio`  
+**路由**：`/pricing-billing/customer/portfolio`  
 **组件路径**：`src/pages/customer/portfolio/index.tsx`  
 **菜单 i18n key**：`menu.customer.portfolio`  
 **所属用例**：客户管理需求、UC-3（第 4 点）
@@ -133,7 +133,7 @@ POST   /api/pricing/bulk-apply
 
 ### 批量定价审批联动
 批量定价提交后，Mock 服务判断折扣幅度是否超过门槛：
-- 若超过 → 返回 `approvalRequired: true`，同时在 `/pricing/approval` 生成对应待审批记录
+- 若超过 → 返回 `approvalRequired: true`，同时在 `/pricing-billing/pricing/approval` 生成对应待审批记录
 - 若未超过 → 直接生效
 
 ### 收入分布展示

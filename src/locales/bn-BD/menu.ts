@@ -49,4 +49,12 @@ export default {
   'menu.editor.flow': 'ফ্লো এডিটর',
   'menu.editor.mind': 'মাইন্ড এডিটর',
   'menu.editor.koni': 'কোনি সম্পাদক',
+    'menu.pricing-billing': 'Pricing & Billing',
+    'menu.pricing-billing.dashboard': 'Dashboard',
+    'menu.pricing-billing.pricing': 'Pricing Configuration',
+    'menu.pricing-billing.billing': 'Billing Management',
+    'menu.pricing-billing.regional': 'Regional Configuration',
+    'menu.pricing-billing.regional.tax': 'Tax Configuration',
+    'menu.pricing-billing.invoice': 'Invoice Management',
+    'menu.pricing-billing.approvals': 'Approvals',
 };

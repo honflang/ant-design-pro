@@ -50,4 +50,12 @@ export default {
   'menu.editor.flow': 'Penyusun Alur',
   'menu.editor.mind': 'Penyusun Mind',
   'menu.editor.koni': 'Penyusun Koni',
+    'menu.pricing-billing': 'Pricing & Billing',
+    'menu.pricing-billing.dashboard': 'Dashboard',
+    'menu.pricing-billing.pricing': 'Pricing Configuration',
+    'menu.pricing-billing.billing': 'Billing Management',
+    'menu.pricing-billing.regional': 'Regional Configuration',
+    'menu.pricing-billing.regional.tax': 'Tax Configuration',
+    'menu.pricing-billing.invoice': 'Invoice Management',
+    'menu.pricing-billing.approvals': 'Approvals',
 };

@@ -1,6 +1,6 @@
 # 11 — 客户 360 视图 Customer 360 View
 
-**路由**：`/customer/360`  
+**路由**：`/pricing-billing/customer/360`  
 **组件路径**：`src/pages/customer/360/index.tsx`  
 **菜单 i18n key**：`menu.customer.360`  
 **所属用例**：客户管理需求、UC-3（第 4 点）
@@ -42,7 +42,7 @@ Client 360 视图是客户经理的核心工作界面，在单一视图中聚合
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 客户 360 详情页（子路由 `/customer/360/:clientId`）
+### 客户 360 详情页（子路由 `/pricing-billing/customer/360/:clientId`）
 ```
 ┌────────────────────────────────────────────────────────────────┐
 │ ← Back    ACME Corporation Pte. Ltd.   [SG] [Corporate] [RM: John]│
@@ -161,7 +161,7 @@ GET    /api/customers/:id/alerts               → RevenueAlert[]
 - 如果 FX 交易量 > 阈值 → 推荐 ECR Hedging
 
 ### 定价溯源
-"当前定价" 区域中每行价格旁有 "View Rule" 链接，点击跳转到 `/pricing/rules` 并打开对应规则的详情 Drawer。
+"当前定价" 区域中每行价格旁有 "View Rule" 链接，点击跳转到 `/pricing-billing/pricing/rules` 并打开对应规则的详情 Drawer。
 
 ---
 

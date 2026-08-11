@@ -1,6 +1,6 @@
 # 13 — 税务配置 Tax Configuration ✅ 已实现
 
-**路由**：`/regional/tax`  
+**路由**：`/pricing-billing/regional/tax`  
 **组件路径**：`src/pages/regional/tax/index.tsx`  
 **菜单 i18n key**：`menu.regional.tax`  
 **所属用例**：UC-1 区域适配与合规
@@ -83,7 +83,7 @@ PATCH  /api/regional/tax-rules/:id/toggle-status       → { success, data: TaxR
 
 ## 5. 业务关联
 
-此页面的税务规则被 **Invoice Management**（`/billing/invoice`）引用：
+此页面的税务规则被 **Invoice Management**（`/pricing-billing/billing/invoice`）引用：
 - 发票详情中展示适用的 `taxRuleId` + `taxRuleName`
 - 链接回本页面对应规则行（体现 Tax Configuration → Invoice 业务闭环）
 

@@ -1,6 +1,6 @@
 # 03 — 定价规则 Pricing Rules
 
-**路由**：`/pricing/rules`  
+**路由**：`/pricing-billing/pricing/rules`  
 **组件路径**：`src/pages/pricing/rules/index.tsx`  
 **菜单 i18n key**：`menu.pricing.rules`  
 **所属用例**：UC-2 灵活定价配置

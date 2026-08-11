@@ -1,6 +1,6 @@
 # 05 — 审批工作流 Pricing Approval Workflow
 
-**路由**：`/pricing/approval`  
+**路由**：`/pricing-billing/pricing/approval`  
 **组件路径**：`src/pages/pricing/approval/index.tsx`  
 **菜单 i18n key**：`menu.pricing.approval`  
 **所属用例**：UC-3（第 3 点）

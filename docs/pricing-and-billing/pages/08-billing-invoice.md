@@ -1,6 +1,6 @@
 # 08 — 发票管理 Invoice Management
 
-**路由**：`/billing/invoice`  
+**路由**：`/pricing-billing/billing/invoice`  
 **组件路径**：`src/pages/billing/invoice/index.tsx`  
 **菜单 i18n key**：`menu.billing.invoice`  
 **所属用例**：UC-1（合规发票）、UC-3（第 6 点：按需开票、更正重发）
@@ -64,7 +64,7 @@
 │                                                                       │
 │ ── Tax Rule Applied ──────────────────────────────────────────────│
 │ Tax Rule: SG-GST-9 | Treatment: Tax Exclusive | Auth: IRAS          │
-│ (链接到 /regional/tax 对应规则)                                       │
+│ (链接到 /pricing-billing/regional/tax 对应规则)                                       │
 └────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -176,7 +176,7 @@ GET    /api/billing/invoices/:id/download       → file
 4. 确认后：原发票状态改为 `CORRECTED`，生成新的 Corrected Invoice
 
 ### 税务规则溯源
-发票详情底部展示所应用的税务规则来源，链接到 `/regional/tax` 对应条目，体现 Tax Configuration → Invoice 的业务闭环。
+发票详情底部展示所应用的税务规则来源，链接到 `/pricing-billing/regional/tax` 对应条目，体现 Tax Configuration → Invoice 的业务闭环。
 
 ---
 
