@@ -50,4 +50,6 @@ export default {
   'menu.editor.mind': 'Mind Editor',
   'menu.editor.koni': 'Koni Editor',
   'menu.chatbot': 'AI Assistant',
+  'menu.regional': 'Regional Configuration',
+  'menu.regional.tax': 'Tax Configuration',
 };

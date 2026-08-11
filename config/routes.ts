@@ -281,6 +281,23 @@ export default [
     ],
   },
   {
+    path: '/regional',
+    name: 'regional',
+    icon: 'global',
+    routes: [
+      {
+        path: '/regional',
+        redirect: '/regional/tax',
+      },
+      {
+        name: 'tax',
+        icon: 'audit',
+        path: '/regional/tax',
+        component: './regional/tax',
+      },
+    ],
+  },
+  {
     path: '/chatbot',
     name: 'chatbot',
     icon: 'robot',
