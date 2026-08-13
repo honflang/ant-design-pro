@@ -94,8 +94,8 @@ export const layout: RunTimeLayoutConfig = ({
       const localeEnabled =
         (initialState?.settings as { locale?: boolean })?.locale !== false;
       return [
-        <DocLink key="doc" />,
-        <VersionDropdown key="version" />,
+        // <DocLink key="doc" />,
+        // <VersionDropdown key="version" />,
         localeEnabled && <LangDropdown key="lang" />,
       ].filter(Boolean);
     },

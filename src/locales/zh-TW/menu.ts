@@ -55,6 +55,6 @@ export default {
     'menu.pricing-billing.billing': '計費管理',
     'menu.pricing-billing.regional': '區域配置',
     'menu.pricing-billing.regional.tax': '稅務配置',
-    'menu.pricing-billing.invoice': '發票管理',
+    'menu.pricing-billing.billing.invoice': '發票管理',
     'menu.pricing-billing.approvals': '審批管理',
 };

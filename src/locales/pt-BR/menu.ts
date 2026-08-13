@@ -57,6 +57,6 @@ export default {
     'menu.pricing-billing.billing': 'Billing Management',
     'menu.pricing-billing.regional': 'Regional Configuration',
     'menu.pricing-billing.regional.tax': 'Tax Configuration',
-    'menu.pricing-billing.invoice': 'Invoice Management',
+    'menu.pricing-billing.billing.invoice': 'Invoice Management',
     'menu.pricing-billing.approvals': 'Approvals',
 };

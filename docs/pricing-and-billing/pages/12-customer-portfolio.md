@@ -1,197 +1,370 @@
-# 12 — 客户组合管理 Customer Portfolio
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/customer/portfolio`  
-**组件路径**：`src/pages/customer/portfolio/index.tsx`  
-**菜单 i18n key**：`menu.customer.portfolio`  
-**所属用例**：客户管理需求、UC-3（第 4 点）
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-客户组合管理面向产品经理/销售负责人，提供跨客户的组合级视图：
-- 按客群、市场、RM 维度汇总收入与定价情况
-- 识别高价值客户与定价优化机会
-- 支持为客户组（Client Group）批量应用定价策略
+当前需要实现的是其中的：
 
-演示价值：
-- "Relationship-based pricing across client portfolios"（UC-3 第 4 点）
-- "Optimize pricing for loyal and quality customers"（客户管理需求第 3 条）
-- 支持 Segment / Client Group 维度的批量定价设置（UC-2 第 1 点）
+> **Customer Portfolio（客户组合管理）**
+
+重点展示如何从“单客户视角”上升到“客户组合视角”，实现分组管理、组合定价和批量策略应用。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
+请新增或完善一个：
+
+> **Customer Portfolio（客户组合管理）**
+
+页面。
+
+需要体现以下业务概念：
+
+* Portfolio Segmentation（组合分层）
+* Client Group Management（客户组管理）
+* Revenue Distribution by Segment/Market（收入分布）
+* Relationship-based Pricing Strategy（关系型定价策略）
+* Bulk Pricing Apply（批量定价应用）
+* Approval Linkage for Bulk Changes（批量策略审批联动）
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Customer Management
+  └── Customer Portfolio
 ```
+
+建议路由：
+
+```text
+/pricing-billing/customer/portfolio
+```
+
+---
+
+## 四、页面总体结构
+
+页面采用：
+
+> StatisticCard + ProCard + ProTable + Drawer + Modal
+
+布局。
+
+整体示意：
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Customer Portfolio                                               │
-│ Manage pricing and performance across client groups             │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Total Clients: 120]  [Client Groups: 8]  [Total Revenue/mo: SGD 2.4M] │
-│ [Avg Deal Size: SGD 20K]  [Top 20% Revenue Clients: 24]         │
+│ [Total Clients] [Client Groups] [Total Revenue] [Avg Deal Size]│
 ├────────────────────────────┬────────────────────────────────────┤
 │ Portfolio by Segment       │ Portfolio by Market                │
-│ Corporate: 68  SGD 1.8M    │ SG: 42   HK: 28   CN: 31          │
-│ FI: 22         SGD 420K    │ JP: 12   AU: 7                     │
-│ SME: 24        SGD 180K    │                                    │
-│ Gov: 6         SGD 200K    │                                    │
 ├────────────────────────────┴────────────────────────────────────┤
-│ Client Groups                          [+ New Group]            │
-│                                                                  │
-│ Group Name     │ Clients│ Pricing Level│ Avg Discount│ Revenue  │
-│ Premium Corp   │  12    │  P3          │    -12%     │ SGD 890K │
-│ Standard Corp  │  36    │  P2          │    -5%      │ SGD 780K │
-│ SME Standard   │  24    │  P2          │    -3%      │ SGD 180K │
-│ ASEAN FI       │  8     │  P3          │    -8%      │ SGD 310K │
+│ Client Groups                                    [+ New Group]  │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Market ▼] [Segment ▼] [Group ▼] [RM ▼] [Search]              │
-│ Clients                         [Assign to Group] [Bulk Pricing] │
-│                                                                   │
-│ Client  │ Segment │ Market │ Group        │ Revenue │ Performance│
-│ ACME    │ Corp    │ SG     │ Premium Corp │ SGD 15K │ On Track  │
-│ Huawei  │ Corp    │ CN     │ Premium Corp │ CNY 80K │ Good      │
-└─────────────────────────────────────────────────────────────────┘
+│ Client List                   [Assign Group] [Bulk Pricing]     │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. 核心组件
+## 五、Mock 数据
 
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 统计卡 | `StatisticCard.Group` | 总客户数、Groups 数、总收入、均值等 |
-| 组合概览 | `ProCard` 双列 | Segment 分布 + Market 分布（简单数字列表或迷你图） |
-| Client Groups | `ProTable` | 可展开查看组内客户 |
-| 新建/编辑 Group | `Drawer` + `ProForm` | 组名、定价级别、关联客户多选 |
-| 客户列表 | `ProTable` | 多选行 → 批量操作（分组、批量定价） |
-| 批量定价 | `Modal` + `ProForm` | 选择定价规则 → 应用到选中客户 |
+至少覆盖：
+
+* Premium Corporate Group
+* Standard Corporate Group
+* SME Group
+* FI Group
+
+并体现：
+
+* 不同组的平均折扣差异
+* 不同组的收入贡献差异
+* 不同市场覆盖差异
 
 ---
 
-## 4. Mock 数据结构
+## 六、列表字段
 
-```typescript
-// mock/customer.ts (续)
+Client Group 列表至少包含：
 
+1. Group ID
+2. Group Name
+3. Member Count
+4. Pricing Level
+5. Avg Discount
+6. Total Revenue MTD
+7. Markets Covered
+8. Status
+9. Created By
+10. Created At
+11. Actions
+
+Client List 至少包含：
+
+1. Client
+2. Segment
+3. Market
+4. Group
+5. RM
+6. Revenue
+7. Performance Status
+8. Actions
+
+Actions：
+
+```text
+View Group
+Edit Group
+Assign to Group
+Bulk Pricing
+```
+
+---
+
+## 七、新增 / 编辑 Group
+
+点击：
+
+> New Group
+
+打开 Drawer。
+
+建议分组：
+
+### 1. Group Definition
+
+```text
+Group Name
+Description
+Pricing Level
+Status
+```
+
+### 2. Scope & Members
+
+```text
+Markets Covered
+Target Segment
+Members (multi-select)
+```
+
+### 3. Pricing Policy (optional)
+
+```text
+Default Discount Band
+Preferred Products
+Review Cycle
+```
+
+---
+
+## 八、Portfolio Detail
+
+支持 Group 详情查看，建议使用：
+
+> ProDescriptions + ProTable + ProCard
+
+展示：
+
+```text
+Group Profile
+Member List
+Revenue Contribution
+Applied Pricing Level
+Recent Portfolio Actions
+```
+
+并增加：
+
+### Bulk Pricing Preview
+
+```text
+Target Clients
+Adjustment Type
+Adjustment Value
+Effective Period
+Approval Requirement
+```
+
+---
+
+## 九、页面顶部增加区域概览
+
+建议统计卡：
+
+```text
+Total Clients
+Total Groups
+Portfolio Revenue MTD
+Top 20% Revenue Clients
+Average Deal Size
+```
+
+可补充：
+
+```text
+Groups Under Review
+```
+
+---
+
+## 十、与 Pricing Rules / Approval 的业务关系
+
+页面中需体现：
+
+> Portfolio 批量策略会生成 CLIENT_GROUP 级规则；超过门槛的批量变更进入审批流程。
+
+流程建议：
+
+```text
+Portfolio Grouping
+   ↓
+Bulk Pricing Strategy
+   ↓
+Threshold Check
+   ↓
+Approval (if required)
+   ↓
+Group-level Pricing Effective
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface ClientGroup {
   id: string;
   groupName: string;
-  description?: string;
-  pricingLevel: 'P2' | 'P3';      // 组级别适用的定价规则层级
+  pricingLevel: 'P2' | 'P3';
   memberCount: number;
   avgDiscountPercent: number;
   totalRevenueMTD: number;
-  currency: string;
-  markets: string[];               // 组内覆盖的市场
+  markets: string[];
   status: 'ACTIVE' | 'INACTIVE';
-  createdBy: string;
-  createdAt: string;
-}
-
-interface ClientGroupMember {
-  groupId: string;
-  clientId: string;
-  clientName: string;
-  market: string;
-  segment: string;
-  addedAt: string;
-}
-
-interface BulkPricingRequest {
-  clientIds: string[];
-  product: string;
-  adjustmentType: 'DISCOUNT' | 'SURCHARGE' | 'WAIVER';
-  adjustmentValue: number;
-  adjustmentUnit: 'PERCENT' | 'ABSOLUTE';
-  effectiveFrom: string;
-  effectiveTo?: string;
-  reason: string;
 }
 ```
 
----
+Mock API：
 
-## 5. Mock API
-
-```
-GET    /api/customers/groups                    → { data: ClientGroup[], total: number }
-POST   /api/customers/groups                    → ClientGroup
-PUT    /api/customers/groups/:id                → ClientGroup
-GET    /api/customers/groups/:id/members        → ClientGroupMember[]
-POST   /api/customers/groups/:id/members        → { added: number }   (批量加入)
-
-# 批量定价（生成多条 PricingRule，scope=CLIENT_GROUP）
+```text
+GET    /api/customers/groups
+POST   /api/customers/groups
+PUT    /api/customers/groups/:id
+GET    /api/customers/groups/:id/members
+POST   /api/customers/groups/:id/members
 POST   /api/pricing/bulk-apply
-  body: BulkPricingRequest
-  → { created: number, approvalRequired: boolean, approvalRequestIds: string[] }
 ```
 
 ---
 
-## 6. 业务逻辑
+## 十二、技术要求
 
-### 批量定价审批联动
-批量定价提交后，Mock 服务判断折扣幅度是否超过门槛：
-- 若超过 → 返回 `approvalRequired: true`，同时在 `/pricing-billing/pricing/approval` 生成对应待审批记录
-- 若未超过 → 直接生效
+必须遵循当前项目已有技术栈：
 
-### 收入分布展示
-Portfolio 概览中的 Segment / Market 分布使用简单数字列表（无需真实图表库），展示各维度的客户数 + 月度收入，保持实现简单。
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProTable
+* ProForm
+* ProDescriptions
+* ProCard
 
----
-
-## 7. 国际化 Key 列表
-
-```
-menu.customer.portfolio
-
-pages.customer.portfolio.title
-pages.customer.portfolio.subTitle
-pages.customer.portfolio.stat.totalClients
-pages.customer.portfolio.stat.groups
-pages.customer.portfolio.stat.totalRevenue
-pages.customer.portfolio.stat.avgDeal
-pages.customer.portfolio.stat.topClients
-pages.customer.portfolio.section.bySegment
-pages.customer.portfolio.section.byMarket
-pages.customer.portfolio.groups.title
-pages.customer.portfolio.groups.addGroup
-pages.customer.portfolio.groups.col.name
-pages.customer.portfolio.groups.col.members
-pages.customer.portfolio.groups.col.pricingLevel
-pages.customer.portfolio.groups.col.avgDiscount
-pages.customer.portfolio.groups.col.revenue
-pages.customer.portfolio.groups.col.status
-pages.customer.portfolio.clients.title
-pages.customer.portfolio.clients.assignGroup
-pages.customer.portfolio.clients.bulkPricing
-pages.customer.portfolio.clients.col.name
-pages.customer.portfolio.clients.col.segment
-pages.customer.portfolio.clients.col.market
-pages.customer.portfolio.clients.col.group
-pages.customer.portfolio.clients.col.revenue
-pages.customer.portfolio.clients.col.performance
-pages.customer.portfolio.bulk.title
-pages.customer.portfolio.bulk.product
-pages.customer.portfolio.bulk.adjustType
-pages.customer.portfolio.bulk.adjustValue
-pages.customer.portfolio.bulk.period
-pages.customer.portfolio.bulk.reason
-pages.customer.portfolio.msg.groupCreated
-pages.customer.portfolio.msg.bulkApplied
-pages.customer.portfolio.msg.approvalRequired
-```
+不要引入新的 UI framework。不要升级依赖。
 
 ---
 
-## 8. 文件结构
+## 十三、交互要求
 
-```
-src/pages/customer/portfolio/
-├── index.tsx
-├── data.d.ts
-└── service.ts
+至少实现：
 
-mock/customer.ts
+### 查询
+
+```text
+Market
+Segment
+Group
+RM
+Keyword
 ```
+
+### 新建客户组
+
+New Group → Drawer → Submit → Mock 新增。
+
+### 分配客户
+
+Assign to Group → 批量选择客户 → 更新归属。
+
+### 批量定价
+
+Bulk Pricing → 提交批量调整 → 返回直接生效或审批要求。
+
+### 组详情
+
+View Group → 展示成员和收入贡献。
+
+---
+
+## 十四、Demo 重点
+
+这个页面不是为了展示“客户分组表”，而是为了向银行客户展示：
+
+> **面向客户组合的定价运营能力，可在规模化场景下保持策略一致与风险可控。**
+
+建议突出：
+
+```text
+Portfolio Segmentation
+        ↓
+Group Strategy
+        ↓
+Bulk Pricing Action
+        ↓
+Controlled Approval & Execution
+```
+
+---
+
+## 十五、实现要求
+
+在开始修改代码之前：
+
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有客户模块表格与筛选模式。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
+
+然后实现：
+
+* 页面
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 新建/编辑 Group
+* 分配客户
+* 批量定价
+* 详情展示
+* 审批联动提示
+
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+
+**不要实现真实客户主数据平台、真实审批引擎、真实后端 API。当前目标是可用于客户演示的高质量 Demo。**

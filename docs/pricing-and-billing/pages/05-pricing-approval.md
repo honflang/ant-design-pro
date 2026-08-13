@@ -1,234 +1,356 @@
-# 05 — 审批工作流 Pricing Approval Workflow
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/pricing/approval`  
-**组件路径**：`src/pages/pricing/approval/index.tsx`  
-**菜单 i18n key**：`menu.pricing.approval`  
-**所属用例**：UC-3（第 3 点）
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-展示基于规则的审批工作流，核心逻辑：
-- **在预设风险门槛（Hurdle Rate / Threshold）内**的定价变更自动通过，无需人工审批
-- 超出门槛的申请进入多级审批流程，支持产品级授权委托（Delegation）
-- 审批人可在此页面查看待处理申请、审批通过/拒绝、查看申请详情
+当前需要实现的是其中的：
 
-演示价值：
-- 体现 Rule-based Approval Workflow（UC-2 第 5 点、UC-3 第 3 点）
-- 展示 "auto-approve within threshold" 的智能化能力
+> **Pricing Approval Workflow（定价审批工作流）**
+
+重点展示系统如何基于门槛规则进行自动审批与分级人工审批，确保风险可控与流程可审计。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
+请新增或完善一个：
+
+> **Pricing Approval（定价审批）**
+
+页面。
+
+需要体现以下业务概念：
+
+* Threshold-based Auto Approval（门槛内自动通过）
+* Multi-level Approval（L1 / L2 / CFO）
+* Product-specific Delegation（产品级门槛差异）
+* Approval Decision（通过 / 拒绝）
+* Approval History（审批轨迹）
+* Auditability（可追溯）
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Pricing Configuration
+  └── Pricing Approval
 ```
+
+建议路由：
+
+```text
+/pricing-billing/pricing/approval
+```
+
+如果项目已存在该路由和菜单，请保持结构不变，仅升级文档提示词表达方式。
+
+---
+
+## 四、页面总体结构
+
+页面采用：
+
+> ProCard + StatisticCard + ProTable + Drawer + Modal
+
+布局。
+
+整体示意：
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Pricing Approval                                                 │
-│ Rule-based approval workflow with auto-approval thresholds      │
+│ Rule-based workflow with threshold and delegation               │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Pending: 3]  [Auto-Approved Today: 12]  [Approved: 45]         │
-│ [Rejected: 4]                                                    │
+│ [Pending] [Auto Approved Today] [Approved] [Rejected]          │
 ├──────────────────────────────────────────────────────────────────┤
-│ Threshold Rules (门槛规则说明横幅)                                 │
-│ ≤ -10% → Auto Approve  |  -10% ~ -20% → L1 Approval            │
-│ -20% ~ -30% → L2 Approval  |  > -30% → CFO Required            │
+│ Threshold Rules Banner (Auto / L1 / L2 / CFO)                  │
 ├──────────────────────────────────────────────────────────────────┤
 │ [Status ▼] [Product ▼] [Requestor ▼] [Date Range] [Search]     │
 ├──────────────────────────────────────────────────────────────────┤
-│ Approval Requests                        [Export]               │
-│                                                                  │
-│ ID     │ Subject    │ Discount│ Threshold│ Level │ Status  │... │
-│ REQ-01 │ ACME -15%  │ -15%    │ Exceeded │ L1    │ Pending │... │
-│ REQ-02 │ HSBC -8%   │ -8%     │ Within   │ Auto  │ Approved│... │
-│ REQ-03 │ DBS  -25%  │ -25%    │ Exceeded │ L2    │ Pending │... │
+│ Approval Requests                                                │
+│ ID │ Subject │ Discount │ Threshold │ Level │ Status │ Actions  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-审批详情 Drawer：
-```
-┌──────────────────────────────────────────────────┐
-│ Approval Request REQ-001           [Approve] [Reject] │
-│                                                        │
-│ Simulation Details   → ProDescriptions                │
-│ Client / Product / Discount / Revenue Impact          │
-│                                                        │
-│ Threshold Check                                       │
-│ Configured Threshold: -10%                            │
-│ Requested Discount:   -15%  ← Exceeds threshold       │
-│ Required Approval:    L1 Manager                      │
-│                                                        │
-│ Approval History                                      │
-│ 2026-07-15  Submitted by john.doe                     │
-│ 2026-07-15  Forwarded to L1 Approver                  │
-│                                                        │
-│ [Approve with Comment]  [Reject with Reason]          │
-└──────────────────────────────────────────────────────┘
+---
+
+## 五、Mock 数据
+
+至少准备：
+
+* AUTO_APPROVED 样例
+* L1 待审样例
+* L2 待审样例
+* CFO 待审样例
+* REJECTED 样例
+
+示例：
+
+```text
+REQ-001  Discount -8%   → AUTO_APPROVED
+REQ-002  Discount -15%  → PENDING (L1)
+REQ-003  Discount -25%  → PENDING (L2)
+REQ-004  Discount -35%  → PENDING (CFO)
+REQ-005  Discount -22%  → REJECTED
 ```
 
 ---
 
-## 3. 核心组件
+## 六、列表字段
 
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 统计卡 | `StatisticCard.Group` | Pending/Auto-Approved/Approved/Rejected 计数 |
-| 门槛规则说明 | `ProCard` + `Steps` 或 `Tag` 组 | 静态展示阈值规则 |
-| 申请列表 | `ProTable` | 支持状态筛选、快速操作 |
-| 审批详情 | `Drawer` + `ProDescriptions` + `Steps`（审批历史） | 详情 + 历史时间线 |
-| 审批操作 | `Modal.confirm` 含 `Input.TextArea`（备注） | 确认审批/拒绝 |
+Approval Request 列表至少包含：
+
+1. Request ID
+2. Subject
+3. Client
+4. Product
+5. Market
+6. Requested Discount
+7. Threshold Percent
+8. Threshold Check（Within / Exceeded）
+9. Required Approval Level
+10. Status
+11. Current Approver
+12. Requested By
+13. Requested At
+14. Actions
+
+Actions：
+
+```text
+View
+Approve
+Reject
+```
 
 ---
 
-## 4. Mock 数据结构
+## 七、新增 / 编辑（审批操作）
 
-```typescript
-// mock/pricing.ts (续)
+该页一般不新增审批单，而是承接其他页面提交。
 
-type ApprovalLevel = 'AUTO' | 'L1' | 'L2' | 'CFO';
-type ApprovalStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'AUTO_APPROVED' | 'WITHDRAWN';
+需实现操作：
 
+### 1. Approve
+
+```text
+Approve with Comment
+```
+
+### 2. Reject
+
+```text
+Reject with Reason
+```
+
+两者都需要确认框并记录审批历史。
+
+---
+
+## 八、Approval Detail
+
+点击 View 打开详情 Drawer，建议使用：
+
+> ProDescriptions + Steps / Timeline
+
+展示：
+
+```text
+Simulation / Rule Context
+Threshold Check Result
+Required Approval Level
+Current Approver
+Approval History
+Comments
+```
+
+并可视化门槛判定：
+
+```text
+Configured Threshold: -10%
+Requested Discount: -15%
+Result: Exceeded
+Routing: L1 Approval
+```
+
+---
+
+## 九、页面顶部增加区域概览
+
+建议统计卡：
+
+```text
+Pending Requests
+Auto Approved Today
+Approved Requests
+Rejected Requests
+```
+
+可补充：
+
+```text
+Average Turnaround Time
+```
+
+---
+
+## 十、与 Simulation / Rules / Billing 的业务关系
+
+页面中需体现：
+
+> Simulation 或 Rule 变更先进入审批；审批通过后才可参与 Billing 执行。
+
+流程：
+
+```text
+Simulation / Rule Change
+   ↓
+Threshold Evaluation
+   ↓
+Auto or Manual Approval
+   ↓
+Approved Pricing Activation
+   ↓
+Billing Run
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface ApprovalRequest {
-  id: string;                   // 'REQ-001'
-  simulationId: string;         // 关联 SimulationResult.id
-  subject: string;              // 'ACME Corp Cash Management -15%'
-  clientId: string;
+  id: string;
+  simulationId?: string;
+  subject: string;
   clientName: string;
   product: string;
   market: string;
   requestedDiscountPercent: number;
-  baseRevenue: number;
-  adjustedRevenue: number;
-  currency: string;
-  thresholdPercent: number;     // 该产品配置的门槛，如 -10
-  thresholdExceeded: boolean;   // requestedDiscountPercent > thresholdPercent
-  requiredApprovalLevel: ApprovalLevel;
-  status: ApprovalStatus;
-  currentApprover?: string;
+  thresholdPercent: number;
+  thresholdExceeded: boolean;
+  requiredApprovalLevel: 'AUTO' | 'L1' | 'L2' | 'CFO';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'AUTO_APPROVED' | 'WITHDRAWN';
   requestedBy: string;
   requestedAt: string;
-  approvalHistory: ApprovalHistoryEntry[];
-  comments?: string;
-}
-
-interface ApprovalHistoryEntry {
-  action: 'SUBMITTED' | 'FORWARDED' | 'APPROVED' | 'REJECTED' | 'AUTO_APPROVED';
-  actorName: string;
-  actorRole: string;
-  timestamp: string;
-  comment?: string;
 }
 ```
 
----
+Mock API：
 
-## 5. Mock API
-
-```
-GET    /api/pricing/approval-requests          → { data: ApprovalRequest[], total: number }
-  params: status, product, market, requestedBy, dateFrom, dateTo, current, pageSize
-
-GET    /api/pricing/approval-requests/:id      → ApprovalRequest
-
+```text
+GET    /api/pricing/approval-requests
+GET    /api/pricing/approval-requests/:id
 POST   /api/pricing/approval-requests/:id/approve
-  body: { comment: string }                    → ApprovalRequest (status=APPROVED)
-
 POST   /api/pricing/approval-requests/:id/reject
-  body: { reason: string }                     → ApprovalRequest (status=REJECTED)
-
-# 门槛配置（静态 Mock）
-GET    /api/pricing/approval-thresholds        → ApprovalThreshold[]
+GET    /api/pricing/approval-thresholds
 ```
 
 ---
 
-## 6. 业务逻辑
+## 十二、技术要求
 
-### 自动审批逻辑（Mock 演示）
-创建审批请求时，Mock 服务自动判断：
+必须遵循现有技术栈：
 
-```
-if abs(requestedDiscountPercent) <= thresholdPercent:
-    status = 'AUTO_APPROVED'
-    requiredApprovalLevel = 'AUTO'
-    approvalHistory += { action: 'AUTO_APPROVED', actorName: 'System', ... }
-else:
-    status = 'PENDING'
-    requiredApprovalLevel = calcLevel(discountPercent)
-```
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProTable
+* ProDescriptions
+* ProCard
+* Steps / Timeline
 
-门槛规则（Mock 固定配置）：
-
-| 折扣范围 | 审批级别 |
-|---------|---------|
-| ≤ 10% | AUTO（自动通过） |
-| 10% ~ 20% | L1（部门经理） |
-| 20% ~ 30% | L2（产品负责人） |
-| > 30% | CFO |
-
-### 产品级授权
-不同产品的门槛不同（Cash Management 更宽松，FX 更严格），体现 "product-specific delegation"（UC-3 第 3 点）。
+不要引入新的 UI framework。不要升级依赖。
 
 ---
 
-## 7. 国际化 Key 列表
+## 十三、交互要求
 
+至少实现：
+
+### 查询
+
+```text
+Status
+Product
+Requestor
+Date Range
+Keyword
 ```
-menu.pricing.approval
 
-pages.pricing.approval.title
-pages.pricing.approval.subTitle
-pages.pricing.approval.stat.pending
-pages.pricing.approval.stat.autoApproved
-pages.pricing.approval.stat.approved
-pages.pricing.approval.stat.rejected
-pages.pricing.approval.threshold.title
-pages.pricing.approval.col.id
-pages.pricing.approval.col.subject
-pages.pricing.approval.col.client
-pages.pricing.approval.col.product
-pages.pricing.approval.col.discount
-pages.pricing.approval.col.thresholdCheck
-pages.pricing.approval.col.level
-pages.pricing.approval.col.status
-pages.pricing.approval.col.requestedBy
-pages.pricing.approval.col.requestedAt
-pages.pricing.approval.col.actions
-pages.pricing.approval.threshold.within
-pages.pricing.approval.threshold.exceeded
-pages.pricing.approval.level.auto
-pages.pricing.approval.level.l1
-pages.pricing.approval.level.l2
-pages.pricing.approval.level.cfo
-pages.pricing.approval.status.pending
-pages.pricing.approval.status.approved
-pages.pricing.approval.status.rejected
-pages.pricing.approval.status.autoApproved
-pages.pricing.approval.status.withdrawn
-pages.pricing.approval.action.approve
-pages.pricing.approval.action.reject
-pages.pricing.approval.action.view
-pages.pricing.approval.detail.title
-pages.pricing.approval.detail.history
-pages.pricing.approval.detail.thresholdCheck
-pages.pricing.approval.confirm.approveTitle
-pages.pricing.approval.confirm.rejectTitle
-pages.pricing.approval.confirm.commentLabel
-pages.pricing.approval.confirm.reasonLabel
-pages.pricing.approval.msg.approved
-pages.pricing.approval.msg.rejected
-pages.pricing.approval.msg.opFailed
+### 查看
+
+View → Detail Drawer。
+
+### 审批通过
+
+Approve → 输入备注 → 更新状态与审批历史。
+
+### 审批拒绝
+
+Reject → 输入原因 → 更新状态与审批历史。
+
+### 自动审批展示
+
+门槛内请求自动变更为 AUTO_APPROVED，并记录 System 操作记录。
+
+---
+
+## 十四、Demo 重点
+
+这个页面不是为了展示“按钮审批”，而是为了向银行客户展示：
+
+> **可配置的风险门槛与授权路径，能够在提升效率的同时保持治理和审计能力。**
+
+建议突出：
+
+```text
+Policy Threshold
+        ↓
+Risk-based Routing
+        ↓
+Controlled Decision
+        ↓
+Audit Trail
 ```
 
 ---
 
-## 8. 文件结构
+## 十五、实现要求
 
-```
-src/pages/pricing/approval/
-├── index.tsx
-├── data.d.ts
-└── service.ts
+在开始修改代码之前：
 
-mock/pricing.ts
-```
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有审批状态与 Tag 展示风格。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
+
+然后实现：
+
+* 页面
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 查看
+* 审批通过
+* 审批拒绝
+* 自动审批展示
+* 审批历史展示
+
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+
+**不要实现真实 BPM 工作流引擎、真实后端审批系统。当前目标是可用于客户演示的高质量 Demo。**

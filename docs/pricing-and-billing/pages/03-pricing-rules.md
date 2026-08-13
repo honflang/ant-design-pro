@@ -1,97 +1,310 @@
-# 03 — 定价规则 Pricing Rules
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/pricing/rules`  
-**组件路径**：`src/pages/pricing/rules/index.tsx`  
-**菜单 i18n key**：`menu.pricing.rules`  
-**所属用例**：UC-2 灵活定价配置
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-定价规则是定价体系的执行层，将价格手册中的标准价格点**与特定客户/客群/交易关联**，并叠加规则层级（优先级）、返佣、减免等调整因子，最终由计费引擎按规则优先级计算实际费用。
+当前需要实现的是其中的：
 
-演示价值：
-- 展示规则定义、规则层级（优先级）概念（UC-2 第 6 点）
-- 展示返佣、减免、促销定价的配置方式（UC-2 第 3 点）
-- 联动价格手册，体现"从标准到定制"的定价链路
+> **Pricing Rules（定价规则）**
+
+重点展示平台如何将 Price Book 标准价格叠加到不同客户层级，并通过规则优先级与调整因子形成最终计费价格。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
+请新增或完善一个：
+
+> **Pricing Rules（定价规则）**
+
+页面。
+
+页面用于管理规则层级、适用范围与调整方式，并体现“从标准价格到客户特价”的执行链路。
+
+需要体现以下业务概念：
+
+* Rule Scope（规则范围：Enterprise / Segment / Client Group / Individual）
+* Rule Priority（优先级）
+* Price Point Reference（关联 Price Book）
+* Adjustment（Discount / Surcharge / Rebate / Waiver / Promotional）
+* Effective Period（生效区间）
+* Approval Status（审批状态）
+* Bulk Upload（批量导入）
+
+注意：这是 Demo，不需要实现完整真实银行规则引擎，只需构造合理模型与交互能力。
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Pricing Configuration
+  └── Pricing Rules
 ```
+
+建议路由：
+
+```text
+/pricing-billing/pricing/rules
+```
+
+若项目已存在该路由和菜单，请保持现有结构，不破坏权限、导航和国际化。
+
+---
+
+## 四、页面总体结构
+
+页面采用：
+
+> ProCard + StatisticCard + ProTable + Drawer / Modal
+
+布局。
+
+整体示意：
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Pricing Rules                                                    │
-│ Define and manage pricing rules with hierarchy and adjustments  │
+│ Define hierarchy-based pricing rules and adjustments            │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Total Rules: 48]  [Enterprise Rules: 12]  [Client Rules: 28]   │
-│ [Segment Rules: 8]                                               │
+│ [Total Rules] [Enterprise] [Segment] [Client/Individual]        │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Market ▼] [Product ▼] [Rule Type ▼] [Status ▼] [Search]       │
+│ Rule Hierarchy: P1 Enterprise → P2 Segment → P3 Group → P4 Ind │
 ├──────────────────────────────────────────────────────────────────┤
-│ Rule Hierarchy (优先级说明横幅)                                   │
-│ Enterprise-wide (P1) → Segment (P2) → Client Group (P3)         │
-│                       → Individual Account (P4) [最高优先]       │
+│ [Market ▼] [Product ▼] [Scope ▼] [Status ▼] [Keyword] [Search] │
 ├──────────────────────────────────────────────────────────────────┤
-│ Pricing Rules                          [+ Add Rule]              │
-│                                                                   │
-│ Priority│ Rule Name │ Product │ Scope │ Adj. Type│Rate│Status│..│
-│ P1      │ Corp Base │ Cash    │ All   │ Standard │-   │Active│..│
-│ P4      │ ACME Deal │ Cash    │ ACME  │ Discount │-5% │Active│..│
+│ Pricing Rules                                   [+ Add Rule]    │
+│ Priority │ Rule Name │ Scope │ Adjustment │ Effective │ Status  │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
----
-
-## 3. 核心组件
-
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 统计卡 | `StatisticCard.Group` | 总规则数、Enterprise/Segment/Client 分类统计 |
-| 规则层级说明 | `ProCard` + `Steps` 横向 | 静态展示优先级链路 P1→P4 |
-| 规则列表 | `ProTable` | 支持 Priority 排序、多维度筛选 |
-| 新增/编辑 | `Drawer` + `ProForm` | 分 5 个 Section |
-| 规则详情 | `Drawer` + `ProDescriptions` + 计算说明 | 展示规则定义 + Step-by-step 计算示例 |
+页面视觉需突出“规则治理平台”属性，而不是普通列表 CRUD。
 
 ---
 
-## 4. Mock 数据结构
+## 五、Mock 数据
 
-```typescript
-// mock/pricing.ts (续)
+建议至少准备以下范围组合：
 
-type RuleScope = 'ENTERPRISE' | 'SEGMENT' | 'CLIENT_GROUP' | 'INDIVIDUAL';
-type AdjustmentType = 'STANDARD' | 'DISCOUNT' | 'SURCHARGE' | 'REBATE' | 'WAIVER' | 'PROMOTIONAL';
+* Enterprise 基础规则
+* Segment（Corporate / SME）规则
+* Client Group（VIP）规则
+* Individual（单客户 Deal）规则
 
+示例：
+
+### Enterprise（P1）
+
+```text
+Rule: Cash Management Base
+Scope: ENTERPRISE
+Adjustment: STANDARD
+Status: ACTIVE
+```
+
+### Individual（P4）
+
+```text
+Rule: ACME Strategic Deal
+Scope: INDIVIDUAL
+Adjustment: DISCOUNT -15%
+Status: ACTIVE
+```
+
+### Segment（P2）
+
+```text
+Rule: SME FX Surcharge
+Scope: SEGMENT
+Adjustment: SURCHARGE +0.05%
+Status: ACTIVE
+```
+
+---
+
+## 六、列表字段
+
+Pricing Rule 列表至少包含：
+
+1. Priority
+2. Rule Name
+3. Rule Code
+4. Product
+5. Market
+6. Scope
+7. Price Point
+8. Adjustment Type
+9. Adjustment Value
+10. Effective From
+11. Effective To
+12. Approval Status
+13. Status
+14. Updated By
+15. Updated At
+16. Actions
+
+Actions：
+
+```text
+View
+Edit
+Disable / Enable
+Submit Approval（可选）
+```
+
+---
+
+## 七、新增 / 编辑 Pricing Rule
+
+点击：
+
+> Add Rule
+
+打开 Drawer。
+
+Drawer 建议分组：
+
+### 1. Rule Scope
+
+```text
+Rule Name
+Rule Code
+Market
+Product
+Scope
+Priority
+```
+
+### 2. Price Point Reference
+
+```text
+Price Point
+Price Point Name（只读或联动）
+```
+
+### 3. Adjustment
+
+```text
+Adjustment Type
+Adjustment Value
+Adjustment Unit (PERCENT / ABSOLUTE)
+Rebate Threshold（可选）
+Waiver Condition（可选）
+Promotion End Date（可选）
+```
+
+### 4. Applicability Target
+
+```text
+Target Segment
+Target Client Group
+Target Client
+```
+
+### 5. Effective & Status
+
+```text
+Effective From
+Effective To
+Status
+```
+
+表单需有合理校验（优先级范围、百分比上下限、结束日期晚于开始日期）。
+
+---
+
+## 八、Pricing Rule Detail
+
+点击 View 打开详情 Drawer。
+
+建议使用：
+
+> ProDescriptions
+
+展示完整规则信息，并增加：
+
+### Rule Calculation Steps
+
+```text
+Step 1: Base Price Point = SGD 50 / month
+Step 2: Matched Rule = P4 Individual Discount -15%
+Step 3: Adjusted Price = SGD 42.50
+Step 4: Tax Applied = GST 9%
+Step 5: Final Amount = SGD 46.33
+```
+
+此区域用于向业务方解释规则命中与计算逻辑。
+
+---
+
+## 九、页面顶部增加区域概览
+
+建议统计卡：
+
+```text
+Total Rules
+Enterprise Rules
+Segment Rules
+Client / Individual Rules
+```
+
+可补充：
+
+```text
+Pending Approval
+Active Rules
+```
+
+---
+
+## 十、与 Price Book / Billing 的业务关系
+
+页面中需体现：
+
+> Price Book 提供基准价格；Pricing Rule 负责差异化调整；Billing 按最高优先级有效规则计费。
+
+可加流程说明：
+
+```text
+Price Book
+   ↓
+Pricing Rules (Hierarchy)
+   ↓
+Rule Match & Adjustment
+   ↓
+Billing Calculation
+   ↓
+Invoice
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface PricingRule {
   id: string;
   ruleName: string;
   ruleCode: string;
   product: string;
   market: string;
-  scope: RuleScope;              // 规则适用范围
-  priority: number;              // 1=最低(企业级), 4=最高(个人账户)
-  // 关联的价格手册条目
+  scope: 'ENTERPRISE' | 'SEGMENT' | 'CLIENT_GROUP' | 'INDIVIDUAL';
+  priority: number;
   pricePointId: string;
-  pricePointName: string;
-  // 调整
-  adjustmentType: AdjustmentType;
-  adjustmentValue?: number;      // 正数=加收，负数=折扣
-  adjustmentUnit?: 'PERCENT' | 'ABSOLUTE'; // -5 PERCENT = 95% of base
-  // 适用对象
-  targetClientId?: string;       // scope=INDIVIDUAL 时使用
-  targetSegment?: string;        // scope=SEGMENT 时使用
-  targetClientGroup?: string;    // scope=CLIENT_GROUP 时使用
-  // 返佣/减免特定字段
-  rebateThreshold?: number;      // 触发返佣的交易量门槛
-  waiverCondition?: string;      // 减免条件描述
-  promotionEndDate?: string;     // 促销结束日期
-  // 周期
+  adjustmentType: 'STANDARD' | 'DISCOUNT' | 'SURCHARGE' | 'REBATE' | 'WAIVER' | 'PROMOTIONAL';
+  adjustmentValue?: number;
+  adjustmentUnit?: 'PERCENT' | 'ABSOLUTE';
   effectiveFrom: string;
   effectiveTo?: string;
-  // 批量上传标记
-  uploadBatch?: string;          // 批次号，若通过批量上传创建
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING_APPROVAL' | 'EXPIRED';
   approvalStatus?: 'APPROVED' | 'PENDING' | 'REJECTED';
   updatedBy: string;
@@ -99,122 +312,118 @@ interface PricingRule {
 }
 ```
 
-**Mock 数据示例**：
+Mock API：
 
-| Priority | Scope | Product | Adjustment |
-|----------|-------|---------|------------|
-| P1 | ENTERPRISE | Cash Management | Standard (Base Rate) |
-| P2 | SEGMENT (Corporate) | Cash Management | -5% Discount |
-| P3 | CLIENT_GROUP (Premium) | Trade Finance | -10% Discount |
-| P4 | INDIVIDUAL (ACME Corp) | Cash Management | -15% Deal Rate |
-| P2 | SEGMENT (SME) | FX Services | +0.05% Surcharge |
-| P1 | ENTERPRISE | Trade Finance | Standard (Base Rate) |
-
----
-
-## 5. Mock API
-
-```
-GET    /api/pricing/rules                     → { data: PricingRule[], total: number }
-  params: market, product, scope, status, keyword, current, pageSize
-
-POST   /api/pricing/rules                     → PricingRule
-PUT    /api/pricing/rules/:id                 → PricingRule
-PATCH  /api/pricing/rules/:id/status          → PricingRule
-GET    /api/pricing/rules/:id                 → PricingRule
-
-# 批量上传（演示用，不做真实文件解析，返回固定 Mock 结果）
-POST   /api/pricing/rules/bulk-upload         → { imported: number, failed: number, batchId: string }
+```text
+GET    /api/pricing/rules
+POST   /api/pricing/rules
+PUT    /api/pricing/rules/:id
+PATCH  /api/pricing/rules/:id/status
+GET    /api/pricing/rules/:id
+POST   /api/pricing/rules/bulk-upload
 ```
 
 ---
 
-## 6. 业务逻辑
+## 十二、技术要求
 
-### 规则优先级（Rule Hierarchy）
-规则优先级遵循"越具体越优先"原则：
+必须遵循现有技术栈：
 
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProTable
+* ProForm
+* ProDescriptions
+* ProCard
+* Umi 路由与权限机制
+
+不要引入新框架，不要升级依赖，不要新增不必要第三方库。
+
+---
+
+## 十三、交互要求
+
+至少实现：
+
+### 查询
+
+```text
+Market
+Product
+Scope
+Status
+Keyword
 ```
-优先级  范围              典型场景
-P1      Enterprise-wide   所有客户的基础费率
-P2      Segment           Corporate / SME 客群折扣
-P3      Client Group      VIP 客户组专属费率
-P4      Individual        单一客户的 Deal 定价（最高优先级）
-```
 
-计费时系统取**最高优先级（Priority 数值最大）**的有效规则。
+### 新增
 
-### Step-by-step 计算展示
-在规则详情中展示计算推导链（UC-2 第 6 点）：
+Add Rule → Drawer → Submit → Mock 新增 → 刷新列表。
 
-```
-Step 1: 查找适用的 Price Point   → Cash Management @ SGD 50/month
-Step 2: 匹配规则层级             → P4 个人规则（-15% Discount）生效
-Step 3: 应用调整                 → SGD 50 × (1 - 15%) = SGD 42.50
-Step 4: 应用税务规则             → GST 9% → SGD 42.50 × 1.09 = SGD 46.33
-Step 5: 最终计费金额             → SGD 46.33
-```
+### 编辑
+
+Edit → Drawer 回填 → Submit → Mock 更新 → 刷新列表。
+
+### 查看
+
+View → Detail Drawer（含规则计算步骤）。
+
+### 启用 / 禁用
+
+操作前弹确认，确认后更新状态。
 
 ### 批量上传
-Demo 中不做真实 CSV 解析，点击"批量上传"后展示一个 Upload 组件，上传任意文件后返回固定的 Mock 导入结果（导入成功 N 条、失败 M 条）。
+
+支持上传入口，返回固定 Mock 导入结果（导入 N 条、失败 M 条）。
 
 ---
 
-## 7. 国际化 Key 列表
+## 十四、Demo 重点
 
-```
-menu.pricing.rules
+这个页面不是为了展示“规则 CRUD”，而是为了展示：
 
-pages.pricing.rules.title
-pages.pricing.rules.subTitle
-pages.pricing.rules.addRule
-pages.pricing.rules.bulkUpload
-pages.pricing.rules.stat.total
-pages.pricing.rules.stat.enterprise
-pages.pricing.rules.stat.segment
-pages.pricing.rules.stat.client
-pages.pricing.rules.hierarchy.title
-pages.pricing.rules.col.priority
-pages.pricing.rules.col.ruleName
-pages.pricing.rules.col.ruleCode
-pages.pricing.rules.col.product
-pages.pricing.rules.col.market
-pages.pricing.rules.col.scope
-pages.pricing.rules.col.adjustmentType
-pages.pricing.rules.col.adjustmentValue
-pages.pricing.rules.col.effectiveFrom
-pages.pricing.rules.col.status
-pages.pricing.rules.col.approvalStatus
-pages.pricing.rules.col.actions
-pages.pricing.rules.scope.enterprise
-pages.pricing.rules.scope.segment
-pages.pricing.rules.scope.clientGroup
-pages.pricing.rules.scope.individual
-pages.pricing.rules.adjType.standard
-pages.pricing.rules.adjType.discount
-pages.pricing.rules.adjType.surcharge
-pages.pricing.rules.adjType.rebate
-pages.pricing.rules.adjType.waiver
-pages.pricing.rules.adjType.promotional
-pages.pricing.rules.calcSteps.title
-pages.pricing.rules.form.section.scope
-pages.pricing.rules.form.section.pricePoint
-pages.pricing.rules.form.section.adjustment
-pages.pricing.rules.form.section.period
-pages.pricing.rules.msg.created
-pages.pricing.rules.msg.updated
-pages.pricing.rules.msg.bulkImported
+> **Centralized Rule Governance + Hierarchy-based Pricing Execution**
+
+请突出：
+
+```text
+Central Rule Definition
+        ↓
+Priority-based Rule Match
+        ↓
+Client-specific Pricing Outcome
+        ↓
+Transparent Billing Result
 ```
 
 ---
 
-## 8. 文件结构
+## 十五、实现要求
 
-```
-src/pages/pricing/rules/
-├── index.tsx
-├── data.d.ts
-└── service.ts
+在开始修改代码之前：
 
-mock/pricing.ts        ← 与 price-book 共用同一文件
-```
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有页面使用的 ProTable / ProForm 模式。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
+
+然后实现：
+
+* 页面
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 新增
+* 编辑
+* 查看
+* 启用 / 禁用
+* 批量上传
+* Rule Calculation Steps
+
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+
+**不要实现真实规则引擎、真实审批引擎、真实后端 API。当前目标是可用于客户演示的高质量 Demo。**

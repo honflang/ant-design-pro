@@ -1,217 +1,362 @@
-# 11 — 客户 360 视图 Customer 360 View
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/customer/360`  
-**组件路径**：`src/pages/customer/360/index.tsx`  
-**菜单 i18n key**：`menu.customer.360`  
-**所属用例**：客户管理需求、UC-3（第 4 点）
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-Client 360 视图是客户经理的核心工作界面，在单一视图中聚合客户的：
-- 基础信息与市场分布
-- 当前有效定价方案（Price Book + Deal）
-- 计费历史与发票摘要
-- 产品推荐（使用简单 Mock 规则模拟 AI 推荐）
-- 收入绩效与预警
+当前需要实现的是其中的：
 
-演示价值：
-- "360 customer view"（客户管理需求第 1 条）
-- "Relationship-based pricing across client portfolios"（UC-3 第 4 点）
-- "Optimize pricing for loyal and quality customers"（客户管理需求第 3 条）
-- "Product recommendations using data analytics/Gen AI"（客户管理需求第 2 条，简化演示）
+> **Customer 360 View（客户 360 视图）**
+
+重点展示在单一客户视角下，如何聚合客户画像、当前定价、计费发票、收入表现与推荐建议，支持客户经理进行综合决策。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
-此页面由两部分组成：**客户搜索列表** + **单客户 360 详情**（点击进入）。
+请新增或完善一个：
 
-### 客户列表
-```
-┌─────────────────────────────────────────────────────────────────┐
-│ Customer 360                                                     │
-│ Unified view of pricing, billing and performance per client     │
-├──────────────────────────────────────────────────────────────────┤
-│ [Market ▼] [Segment ▼] [RM ▼] [Search client name / ID]        │
-├──────────────────────────────────────────────────────────────────┤
-│ ACME Corp       SG  Corporate  RM: John  SGD 15K/mo  ✓ Active  │
-│ Daiwa Securities JP  FI        RM: Sarah JPY 2M/mo   ⚠ Risk    │
-│ CCB             CN  Corporate  RM: Wei   CNY 80K/mo  ✓ Active  │
-└─────────────────────────────────────────────────────────────────┘
+> **Customer 360 View（客户 360 视图）**
+
+页面。
+
+需要体现以下业务概念：
+
+* Unified Customer Profile（客户统一画像）
+* Current Effective Pricing（当前生效定价）
+* Billing & Invoice Snapshot（计费与发票摘要）
+* Revenue & Performance Alerts（收入与绩效预警）
+* Product Recommendation（产品推荐，Mock AI）
+* Relationship-based Pricing Context（关系型定价上下文）
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Customer Management
+  └── Customer 360
 ```
 
-### 客户 360 详情页（子路由 `/pricing-billing/customer/360/:clientId`）
+建议路由：
+
+```text
+/pricing-billing/customer/360
 ```
-┌────────────────────────────────────────────────────────────────┐
-│ ← Back    ACME Corporation Pte. Ltd.   [SG] [Corporate] [RM: John]│
-├──────────────────────────────────────────────────────────────────┤
-│ [MTD Revenue: SGD 15K] [YTD: SGD 126K] [Active Deals: 1]       │
-│ [Products: 3] [Outstanding Invoices: 0]                         │
-├─────────────────────┬────────────────────────────────────────────┤
-│ Client Profile      │ Current Pricing (Price Book + Deal)       │
-│ Tax Reg: 12345     │ Cash: SGD 42.50/mo (P4 -15% from SGD 50)  │
-│ Incorporated: 2001  │ Trade: 0.18% (P4 -10% from 0.20%)        │
-│ Relationship: 2015  │ FX: 0.08% (P3 standard)                  │
-│                     │ [View in Price Book] [View Rules]         │
-├─────────────────────┴────────────────────────────────────────────┤
-│ Billing History (recent 6 months)    Recent Invoices            │
-│ （BarChart）                           （ProList 简洁版）        │
-├──────────────────────────────────────────────────────────────────┤
-│ Product Recommendations (AI-assisted)                            │
-│ 💡 Trade Finance Bundle: Bundling Cash+Trade may save 8%        │
-│ 💡 FX Hedging Service: High FX volume detected, consider ECR   │
-├──────────────────────────────────────────────────────────────────┤
-│ Performance Alerts                                               │
-│ ⚠ Cash Mgmt actual -7.8% vs deal target (SGD -400/mo)          │
-└──────────────────────────────────────────────────────────────────┘
+
+详情建议：
+
+```text
+/pricing-billing/customer/360/:clientId
+```
+
+若项目中已采用 query 形式（如 `?clientId=`），请沿用既有模式。
+
+---
+
+## 四、页面总体结构
+
+页面建议分为两层：
+
+> 客户列表页 + 单客户 360 详情页
+
+整体示意：
+
+```text
+Customer List
+[Market][Segment][RM][Search]
+Client | Market | RM | MTD Revenue | Performance
+
+Customer 360 Detail
+Header KPI Cards
+Profile | Effective Pricing
+Billing History | Recent Invoices
+Recommendations
+Performance Alerts
+```
+
+页面风格应突出“Relationship Management Cockpit”，而非普通信息页。
+
+---
+
+## 五、Mock 数据
+
+至少覆盖客户：
+
+* Singapore Corporate（高价值）
+* Japan FI（风险偏高）
+* China Corporate（多产品）
+* Australia SME（低活跃）
+
+并体现：
+
+* 不同市场收入与币种
+* 不同定价层级（P2/P3/P4）
+* 不同绩效状态（On Track / At Risk / Under-performing）
+
+---
+
+## 六、列表字段
+
+客户列表至少包含：
+
+1. Client ID
+2. Client Name
+3. Market
+4. Segment
+5. RM Name
+6. MTD Revenue
+7. YTD Revenue
+8. Active Deals
+9. Product Count
+10. Outstanding Invoices
+11. Performance Status
+12. Actions
+
+360 详情中 Current Pricing 至少包含：
+
+1. Product
+2. Base Rate
+3. Applied Rate
+4. Discount / Surcharge
+5. Rule Scope
+6. Price Point Link
+7. Pricing Rule Link
+
+Actions：
+
+```text
+View 360
+View Price Book
+View Pricing Rule
 ```
 
 ---
 
-## 3. 核心组件
+## 七、新增 / 编辑（关系动作）
 
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 客户列表 | `ProTable` | 简洁模式，含 RM、Revenue、绩效状态 |
-| 360 详情顶部 | `PageContainer` + `StatisticCard.Group` | 返回按钮 + 关键指标 |
-| 客户信息 | `ProCard` + `ProDescriptions` | 基础信息 |
-| 当前定价 | `ProCard` + 自定义 `Table` | 展示各产品有效价格及规则来源 |
-| 计费历史 | `ProCard` + `Bar` 图 | 近 6 月计费金额 |
-| 近期发票 | `ProList` | 最近 3 张发票 + 链接 |
-| 产品推荐 | `ProCard` + `List` + 自定义 Icon | Mock 推荐规则 |
-| 绩效预警 | `ProCard` + `Alert` 组件 | 同步来自 performance/revenue |
+该页以“查看与管理动作”为主，不强调新增主数据。
+
+建议支持：
+
+### 1. Relationship Notes（可选）
+
+```text
+Add RM Note
+Flag Follow-up
+```
+
+### 2. Recommendation Action（可选）
+
+```text
+Mark Recommendation as Accepted / Ignored
+```
+
+用于演示客户经理工作流闭环。
 
 ---
 
-## 4. Mock 数据结构
+## 八、Customer 360 Detail
 
-```typescript
-// mock/customer.ts
+点击客户进入详情，建议使用：
 
+> ProDescriptions + StatisticCard + ProCard + ProList
+
+展示：
+
+```text
+Client Profile
+Effective Pricing Summary
+Billing History (6 months)
+Recent Invoices
+Performance Alerts
+```
+
+并增加：
+
+### Product Recommendation Preview
+
+```text
+Recommendation Type
+Potential Benefit
+Priority
+Rationale
+```
+
+推荐逻辑可由 Mock 规则生成，不需真实 AI 服务。
+
+---
+
+## 九、页面顶部增加区域概览
+
+在详情页顶部增加 KPI：
+
+```text
+MTD Revenue
+YTD Revenue
+Active Deals
+Products in Use
+Outstanding Invoices
+```
+
+列表页可增加：
+
+```text
+Total Clients
+At-risk Clients
+```
+
+---
+
+## 十、与 Pricing / Billing / Performance 的业务关系
+
+页面中需体现：
+
+> Customer 360 连接定价、计费、绩效三条主线，提供单一客户的可执行决策视图。
+
+流程建议：
+
+```text
+Pricing Setup
+   ↓
+Billing & Invoice Outcome
+   ↓
+Customer 360 Insights
+   ↓
+RM Action / Recommendation
+   ↓
+Performance Improvement
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface Customer {
   id: string;
   name: string;
   market: string;
   segment: 'Corporate' | 'Financial Institution' | 'SME' | 'Government';
-  taxRegNo: string;
-  incorporatedYear: number;
-  relationshipSince: number;     // 与银行建立关系的年份
-  rmId: string;
   rmName: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'REVIEW';
-  // 概览指标
   mtdRevenue: number;
   ytdRevenue: number;
-  currency: string;
   activeDeals: number;
   products: string[];
   outstandingInvoices: number;
   performanceStatus: 'ON_TRACK' | 'AT_RISK' | 'UNDER_PERFORMING';
 }
+```
 
-interface CustomerPricingSummary {
-  clientId: string;
-  items: {
-    product: string;
-    baseRate: string;            // 价格手册标准价 '0.20%' 或 'SGD 50/month'
-    appliedRate: string;         // 实际应用价格
-    discountPercent?: number;
-    ruleScope: string;           // 'P4 Individual Deal' 等
-    pricePointId: string;
-    pricingRuleId: string;
-  }[];
-}
+Mock API：
 
-interface ProductRecommendation {
-  id: string;
-  clientId: string;
-  type: 'BUNDLE_OPPORTUNITY' | 'NEW_PRODUCT' | 'REPRICING' | 'RISK_ALERT';
-  title: string;
-  description: string;
-  potentialSavingPercent?: number;
-  priority: 'HIGH' | 'MEDIUM' | 'LOW';
-}
+```text
+GET    /api/customers
+GET    /api/customers/:id
+GET    /api/customers/:id/pricing-summary
+GET    /api/customers/:id/billing-history
+GET    /api/customers/:id/recent-invoices
+GET    /api/customers/:id/recommendations
+GET    /api/customers/:id/alerts
 ```
 
 ---
 
-## 5. Mock API
+## 十二、技术要求
 
+必须遵循当前项目已有技术栈：
+
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProTable
+* ProDescriptions
+* ProCard
+* ProList
+
+不要引入新的 UI framework。不要升级依赖。
+
+---
+
+## 十三、交互要求
+
+至少实现：
+
+### 查询
+
+```text
+Market
+Segment
+RM
+Performance Status
+Keyword
 ```
-GET    /api/customers                           → { data: Customer[], total: number }
-  params: market, segment, rmId, performanceStatus, keyword, current, pageSize
 
-GET    /api/customers/:id                       → Customer
-GET    /api/customers/:id/pricing-summary       → CustomerPricingSummary
-GET    /api/customers/:id/billing-history       → { month: string, amount: number }[]  (6 months)
-GET    /api/customers/:id/recent-invoices       → Invoice[]  (latest 3)
-GET    /api/customers/:id/recommendations       → ProductRecommendation[]
-GET    /api/customers/:id/alerts               → RevenueAlert[]
+### 查看 360
+
+点击客户进入详情页。
+
+### 定价溯源跳转
+
+从 360 详情跳转到 Price Book / Pricing Rules 对应记录。
+
+### 预警查看
+
+展示该客户关联预警并支持进入 Revenue / Deal 页面。
+
+---
+
+## 十四、Demo 重点
+
+这个页面不是为了展示“客户详情页”，而是为了向银行客户展示：
+
+> **以客户为中心的一站式定价与计费运营视图。**
+
+建议突出：
+
+```text
+Unified Customer Data
+        ↓
+Pricing/Billing Context
+        ↓
+Insight & Recommendation
+        ↓
+RM Actionability
 ```
 
 ---
 
-## 6. 业务逻辑
+## 十五、实现要求
 
-### 产品推荐（Mock AI）
-不接真实 AI，Mock 服务根据客户数据返回固定规则推荐：
-- 如果客户有 Cash + FX 但没有 Trade → 推荐 Trade Finance Bundle
-- 如果 FX 交易量 > 阈值 → 推荐 ECR Hedging
+在开始修改代码之前：
 
-### 定价溯源
-"当前定价" 区域中每行价格旁有 "View Rule" 链接，点击跳转到 `/pricing-billing/pricing/rules` 并打开对应规则的详情 Drawer。
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有 Customer 模块页面风格。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
 
----
+然后实现：
 
-## 7. 国际化 Key 列表
+* 页面（列表 + 详情）
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 360 详情展示
+* 定价溯源跳转
+* 推荐与预警区
 
-```
-menu.customer.360
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
 
-pages.customer.360.title
-pages.customer.360.subTitle
-pages.customer.360.col.name
-pages.customer.360.col.market
-pages.customer.360.col.segment
-pages.customer.360.col.rm
-pages.customer.360.col.revenue
-pages.customer.360.col.performance
-pages.customer.360.stat.mtdRevenue
-pages.customer.360.stat.ytdRevenue
-pages.customer.360.stat.activeDeals
-pages.customer.360.stat.products
-pages.customer.360.stat.outstandingInvoices
-pages.customer.360.profile.title
-pages.customer.360.pricing.title
-pages.customer.360.pricing.product
-pages.customer.360.pricing.baseRate
-pages.customer.360.pricing.appliedRate
-pages.customer.360.pricing.discount
-pages.customer.360.pricing.ruleScope
-pages.customer.360.billingHistory.title
-pages.customer.360.recentInvoices.title
-pages.customer.360.recommendations.title
-pages.customer.360.recommendations.type.bundle
-pages.customer.360.recommendations.type.newProduct
-pages.customer.360.recommendations.type.repricing
-pages.customer.360.recommendations.type.risk
-pages.customer.360.alerts.title
-```
-
----
-
-## 8. 文件结构
-
-```
-src/pages/customer/360/
-├── index.tsx           ← 客户列表
-├── [clientId].tsx      ← 360 详情（或用 query param 代替动态路由）
-├── data.d.ts
-└── service.ts
-
-mock/customer.ts
-```
-
-> **注意**：Umi Max 动态路由使用 `[clientId]` 格式，或改用 `index.tsx` 通过 query string `?clientId=xxx` 切换视图，避免路由配置复杂度。Demo 建议使用后者。
+**不要实现真实 CRM、真实 AI 推荐服务、真实后端 API。当前目标是可用于客户演示的高质量 Demo。**

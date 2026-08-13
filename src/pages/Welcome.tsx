@@ -155,24 +155,12 @@ const Welcome: React.FC = () => {
     <PageContainer
       title={
         <>
-          {intl.formatMessage(
-            {
-              id: 'pages.welcome.celebrationTitle',
-              defaultMessage: '欢迎使用 Ant Design Pro {v6}',
-            },
-            {
-              v6: (
-                <span key="v6" className="welcome-gradient-title">
-                  V6
-                </span>
-              ),
-            },
-          )}
+          欢迎使用 Wholesale Banking Pricing & Billing System
           🎉
         </>
       }
     >
-      <div
+      {/* <div
         data-theme={isDark ? 'dark' : 'light'}
         className="flex flex-col gap-6 md:flex-row"
       >
@@ -200,7 +188,7 @@ const Welcome: React.FC = () => {
             />
           ))}
         </div>
-      </div>
+      </div> */}
     </PageContainer>
   );
 };

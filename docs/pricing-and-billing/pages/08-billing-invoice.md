@@ -1,244 +1,354 @@
-# 08 — 发票管理 Invoice Management
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/billing/invoice`  
-**组件路径**：`src/pages/billing/invoice/index.tsx`  
-**菜单 i18n key**：`menu.billing.invoice`  
-**所属用例**：UC-1（合规发票）、UC-3（第 6 点：按需开票、更正重发）
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-发票管理展示所有已生成的发票，支持：
-- 查看发票详情（含税额、税务规则来源）
-- 按需开票（On-demand Invoice Generation）
-- 发票更正（Correction）并重新生成（UC-3 第 6 点）
-- 不同司法管辖区的合规发票格式展示（UC-1 第 3 点）
+当前需要实现的是其中的：
 
-演示价值：
-- Tax Configuration → Billing Run → Invoice 完整闭环的终点
-- 展示合规发票（不同国家格式差异）
-- 展示发票更正和重发能力
+> **Invoice Management（发票管理）**
+
+重点展示发票生成、查看、更正、重发与税务规则溯源能力，体现从 Pricing/Billing 到 Invoice 的完整闭环。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
+请新增或完善一个：
+
+> **Invoice Management（发票管理）**
+
+页面。
+
+需要体现以下业务概念：
+
+* On-demand Invoice Generation（按需开票）
+* Invoice Lifecycle（Draft / Issued / Sent / Corrected / Cancelled）
+* Tax Rule Traceability（税务规则来源）
+* Jurisdiction-specific Format（不同市场合规格式差异）
+* Correction & Re-issue（更正与重发）
+* Download / Send（下载与发送）
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Billing Management
+  └── Invoice Management
 ```
+
+建议路由：
+
+```text
+/pricing-billing/billing/invoice
+```
+
+---
+
+## 四、页面总体结构
+
+页面采用：
+
+> ProCard + StatisticCard + ProTable + Drawer + Modal
+
+布局。
+
+整体示意：
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Invoice Management                                               │
-│ Generate, view and manage compliant invoices across markets     │
+│ Generate and manage compliant invoices across markets           │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Total: 186]  [Draft: 5]  [Issued: 170]  [Corrected: 11]       │
-│ [Total Billed: SGD 4.8M]                                        │
+│ [Total] [Draft] [Issued] [Corrected] [Total Billed]            │
 ├──────────────────────────────────────────────────────────────────┤
 │ [Market ▼] [Client ▼] [Period ▼] [Status ▼] [Search]           │
 ├──────────────────────────────────────────────────────────────────┤
-│ Invoices              [+ Generate Invoice] [Bulk Download]      │
-│                                                                  │
-│ Invoice # │ Client │ Market │ Period │ Amount │ Tax │ Status│... │
-│ INV-2026-001│ ACME │ SG     │ 2026-07│ SGD 15k│GST │ Issued│..│
-│ INV-2026-002│ Daiwa│ JP     │ 2026-07│ JPY 2M │ CT │ Issued│..│
-│ INV-2026-003│ CCB  │ CN     │ 2026-07│ CNY 80k│VAT │ Draft │..│
+│ Invoices                         [+ Generate] [Bulk Download]   │
+│ Invoice # │ Client │ Market │ Amount │ Tax │ Status │ Actions   │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-发票详情 Drawer：
-```
-┌────────────────────────────────────────────────────────────────────┐
-│ Invoice INV-2026-001                  [Download PDF] [Send] [Correct]│
-│                                                                       │
-│ ── Header ──────────────────────────────────────────────────────── │
-│ To: ACME Corporation Pte. Ltd.       Invoice No: INV-2026-001       │
-│ Market: Singapore                    Period:     2026-07-01~07-31   │
-│ Tax Reg No: 123456789X               Issue Date: 2026-08-01         │
-│                                                                       │
-│ ── Line Items ──────────────────────────────────────────────────── │
-│ Product      │ Description      │ Amount      │ Tax Rate │ Tax Amt  │
-│ Cash Mgmt    │ Account Services │ SGD 5,100   │ 9% GST   │ SGD 459  │
-│ Trade Finance│ LC Services      │ SGD 10,000  │ 9% GST   │ SGD 900  │
-│ ─────────────┴──────────────────┴─────────────┴──────────┴────────│
-│                        Sub Total:   SGD 15,100                       │
-│                        GST (9%):    SGD 1,359                        │
-│                        Total Due:   SGD 16,459                       │
-│                                                                       │
-│ ── Tax Rule Applied ──────────────────────────────────────────────│
-│ Tax Rule: SG-GST-9 | Treatment: Tax Exclusive | Auth: IRAS          │
-│ (链接到 /pricing-billing/regional/tax 对应规则)                                       │
-└────────────────────────────────────────────────────────────────────┘
+---
+
+## 五、Mock 数据
+
+至少覆盖市场：
+
+* Singapore（GST）
+* China（VAT）
+* Japan（Consumption Tax）
+* Hong Kong（可展示低税/免税场景）
+* Australia（GST）
+
+并包含：
+
+* DRAFT 发票
+* ISSUED 发票
+* CORRECTED 发票
+
+---
+
+## 六、列表字段
+
+Invoice 列表至少包含：
+
+1. Invoice Number
+2. Client
+3. Market
+4. Billing Period
+5. Sub Total
+6. Tax Type
+7. Tax Rate
+8. Tax Amount
+9. Total Amount
+10. Invoice Format
+11. Status
+12. Issue Date
+13. Due Date
+14. Actions
+
+Actions：
+
+```text
+View
+Issue
+Correct
+Download
+Send
 ```
 
 ---
 
-## 3. 核心组件
+## 七、新增 / 编辑 Invoice（操作）
 
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 统计卡 | `StatisticCard.Group` | Total/Draft/Issued/Corrected/Total Billed |
-| 发票列表 | `ProTable` | 含 Tax Type Tag |
-| 发票详情 | `Drawer` + 自定义 Invoice 布局 | 模拟 Invoice 外观 |
-| 更正发票 | `Modal` + 表单 | 填写更正原因 → 生成 Corrected Invoice |
-| 生成发票 | `Modal` + `ProForm` | 选择 Run、Client、Format |
+该页主要操作为生成和更正，不是直接手工维护全部字段。
+
+### 1. Generate Invoice
+
+```text
+Billing Run
+Client
+Invoice Format
+Issue Date
+```
+
+### 2. Correct Invoice
+
+```text
+Correction Reason
+Adjusted Line Items (optional)
+```
+
+生成更正后，原单状态更新为 CORRECTED，新单记录 originalInvoiceId。
 
 ---
 
-## 4. Mock 数据结构
+## 八、Invoice Detail
 
-```typescript
-// mock/billing.ts (续)
+点击 View 打开详情 Drawer，建议使用：
 
-type InvoiceStatus = 'DRAFT' | 'ISSUED' | 'SENT' | 'CORRECTED' | 'CANCELLED' | 'OVERDUE';
+> 自定义发票布局 + ProDescriptions + Table
 
+展示：
+
+```text
+Invoice Header
+Invoice Line Items
+Sub Total / Tax / Total Due
+Tax Rule Applied
+Billing Run Reference
+```
+
+并增加：
+
+### Tax Determination Preview
+
+```text
+Tax Rule ID
+Tax Treatment
+Tax Authority
+Tax Calculation Basis
+```
+
+用于解释税额来源。
+
+---
+
+## 九、页面顶部增加区域概览
+
+建议统计卡：
+
+```text
+Total Invoices
+Draft Invoices
+Issued Invoices
+Corrected Invoices
+Total Billed Amount
+```
+
+---
+
+## 十、与 Tax / Billing Run 的业务关系
+
+页面需体现：
+
+> Invoice 由 Billing Run 结果生成，税额由 Tax Configuration 规则决定。
+
+流程建议：
+
+```text
+Tax Configuration
+   ↓
+Billing Run Calculation
+   ↓
+Invoice Generation
+   ↓
+Issue / Send / Correct
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface Invoice {
-  id: string;                    // 'INV-2026-001'
+  id: string;
   billingRunId: string;
-  clientId: string;
   clientName: string;
-  clientTaxRegNo?: string;
   market: string;
-  billingPeriodFrom: string;
-  billingPeriodTo: string;
   issueDate: string;
   dueDate: string;
   currency: string;
   subTotal: number;
+  taxType: string;
+  taxRate: number;
   taxAmount: number;
   totalAmount: number;
-  taxType: string;               // 'GST' | 'VAT' | 'WHT' | 'Consumption Tax'
-  taxRate: number;
-  taxRuleId: string;             // 关联 /regional/tax 中的 TaxRule.id
-  taxRuleName: string;
-  invoiceFormat: string;         // 'PDF' | 'ISO20022' | 'MT940'
-  lineItems: InvoiceLineItem[];
-  status: InvoiceStatus;
-  // 更正
+  taxRuleId: string;
+  invoiceFormat: 'PDF' | 'ISO20022' | 'MT940' | 'XLSX';
+  status: 'DRAFT' | 'ISSUED' | 'SENT' | 'CORRECTED' | 'CANCELLED' | 'OVERDUE';
   isCorrection: boolean;
   originalInvoiceId?: string;
-  correctionReason?: string;
-  createdBy: string;
-  createdAt: string;
-}
-
-interface InvoiceLineItem {
-  product: string;
-  description: string;
-  amount: number;
-  taxRate: number;
-  taxAmount: number;
-  totalAmount: number;
 }
 ```
 
----
+Mock API：
 
-## 5. Mock API
-
-```
-GET    /api/billing/invoices                    → { data: Invoice[], total: number }
-  params: market, clientId, period, status, keyword, current, pageSize
-
-GET    /api/billing/invoices/:id                → Invoice
-
-# 按需生成
-POST   /api/billing/invoices                    → Invoice (status=DRAFT)
-
-# 发出（DRAFT → ISSUED）
-POST   /api/billing/invoices/:id/issue          → Invoice
-
-# 更正发票（生成一张新 Invoice，originalInvoiceId 指向原单）
+```text
+GET    /api/billing/invoices
+GET    /api/billing/invoices/:id
+POST   /api/billing/invoices
+POST   /api/billing/invoices/:id/issue
 POST   /api/billing/invoices/:id/correct
-  body: { reason: string, adjustedLineItems?: InvoiceLineItem[] }
-  → Invoice (isCorrection=true)
-
-# 下载（Mock：返回固定 Blob 或触发前端生成 PDF 占位）
-GET    /api/billing/invoices/:id/download       → file
+GET    /api/billing/invoices/:id/download
 ```
 
 ---
 
-## 6. 业务逻辑
+## 十二、技术要求
 
-### 合规发票格式（UC-1 第 3 点）
-发票详情根据 `market` 展示对应格式说明：
+必须遵循当前项目已有技术栈：
 
-| Market | Tax Type | Invoice Note |
-|--------|---------|--------------|
-| Singapore | GST 9% | IRAS-compliant, Tax Reg. No. required |
-| China | VAT 6% | Fapiao number required |
-| Japan | Consumption Tax 10% | Qualified Invoice (T-number) |
-| Hong Kong | N/A (Exempt) | No tax line required |
-| Australia | GST 10% | ABN required |
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProTable
+* ProForm
+* ProDescriptions
+* ProCard
 
-### 发票更正流程（UC-3 第 6 点）
-1. 对 `ISSUED` 发票点击 "Correct"
-2. Modal 中填写更正原因（Pricing Error / Volume Correction / Tax Rate Change / ...）
-3. 可选：修改 Line Items 金额
-4. 确认后：原发票状态改为 `CORRECTED`，生成新的 Corrected Invoice
-
-### 税务规则溯源
-发票详情底部展示所应用的税务规则来源，链接到 `/pricing-billing/regional/tax` 对应条目，体现 Tax Configuration → Invoice 的业务闭环。
+不要引入新的 UI framework。不要升级依赖。
 
 ---
 
-## 7. 国际化 Key 列表
+## 十三、交互要求
 
+至少实现：
+
+### 查询
+
+```text
+Market
+Client
+Period
+Status
+Keyword
 ```
-menu.billing.invoice
 
-pages.billing.invoice.title
-pages.billing.invoice.subTitle
-pages.billing.invoice.generate
-pages.billing.invoice.bulkDownload
-pages.billing.invoice.stat.total
-pages.billing.invoice.stat.draft
-pages.billing.invoice.stat.issued
-pages.billing.invoice.stat.corrected
-pages.billing.invoice.stat.totalBilled
-pages.billing.invoice.col.invoiceNo
-pages.billing.invoice.col.client
-pages.billing.invoice.col.market
-pages.billing.invoice.col.period
-pages.billing.invoice.col.subTotal
-pages.billing.invoice.col.taxType
-pages.billing.invoice.col.taxAmount
-pages.billing.invoice.col.totalAmount
-pages.billing.invoice.col.status
-pages.billing.invoice.col.issueDate
-pages.billing.invoice.col.actions
-pages.billing.invoice.status.draft
-pages.billing.invoice.status.issued
-pages.billing.invoice.status.sent
-pages.billing.invoice.status.corrected
-pages.billing.invoice.status.cancelled
-pages.billing.invoice.action.view
-pages.billing.invoice.action.issue
-pages.billing.invoice.action.correct
-pages.billing.invoice.action.download
-pages.billing.invoice.action.send
-pages.billing.invoice.detail.header
-pages.billing.invoice.detail.lineItems
-pages.billing.invoice.detail.taxRule
-pages.billing.invoice.detail.subTotal
-pages.billing.invoice.detail.taxTotal
-pages.billing.invoice.detail.grandTotal
-pages.billing.invoice.correct.title
-pages.billing.invoice.correct.reason
-pages.billing.invoice.correct.adjustItems
-pages.billing.invoice.msg.generated
-pages.billing.invoice.msg.issued
-pages.billing.invoice.msg.corrected
-pages.billing.invoice.msg.opFailed
+### 生成发票
+
+Generate Invoice → Mock 创建 DRAFT。
+
+### 发出发票
+
+Issue → 状态从 DRAFT 到 ISSUED。
+
+### 更正发票
+
+Correct → 录入原因 → 生成新发票并关联原单。
+
+### 查看详情
+
+View → Drawer（含税务规则溯源）。
+
+---
+
+## 十四、Demo 重点
+
+这个页面不是为了展示“发票表格”，而是为了向银行客户展示：
+
+> **合规、可追溯、可更正的企业级发票管理能力。**
+
+请突出：
+
+```text
+Billing Output
+        ↓
+Tax-aware Invoice
+        ↓
+Compliant Issuance
+        ↓
+Traceable Correction
 ```
 
 ---
 
-## 8. 文件结构
+## 十五、实现要求
 
-```
-src/pages/billing/invoice/
-├── index.tsx
-├── data.d.ts
-└── service.ts
+在开始修改代码之前：
 
-mock/billing.ts
-```
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有发票详情样式与表格模式。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
+
+然后实现：
+
+* 页面
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 生成
+* 发出
+* 更正
+* 查看
+* 下载/发送入口
+* Tax Determination Preview
+
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+
+**不要实现真实电子发票网关、真实邮件/报文通道、真实后端 API。当前目标是可用于客户演示的高质量 Demo。**

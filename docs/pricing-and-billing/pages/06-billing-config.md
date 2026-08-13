@@ -1,89 +1,262 @@
-# 06 — 计费配置 Billing Configuration
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/billing/configuration`  
-**组件路径**：`src/pages/billing/configuration/index.tsx`  
-**菜单 i18n key**：`menu.billing.configuration`  
-**所属用例**：UC-2（第 4 点）、UC-3（第 6、7、8 点）
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-计费配置定义**如何对客户执行计费**，包括：计费周期、扣费账户、计费合并策略（跨产品/跨国家）、货币换算规则、追溯计费设置。
+当前需要实现的是其中的：
 
-演示价值：
-- 展示 "Configurable Billing"（UC-2 第 4 点：计费周期、扣费账户）
-- 展示 "Billing Consolidation across products, countries"（需求第 2 条）
-- 展示多货币结算（IDR/CNY/BHT → SGD）和追溯天数限制（UC-3 第 8 点）
+> **Billing Configuration（计费配置）**
+
+重点展示同一平台如何为不同市场、客户、币种设置差异化计费参数，并作为 Billing Run 的执行基线。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
+请新增或完善一个：
+
+> **Billing Configuration（计费配置）**
+
+页面。
+
+页面用于管理计费周期、扣费账户、合并规则、换汇规则、追溯设置与发票交付偏好。
+
+需要体现以下业务概念：
+
+* Billing Cycle（MONTHLY / QUARTERLY / ANNUAL / ON_DEMAND）
+* Charge Account（扣费账户）
+* Consolidation（跨产品 / 跨国家）
+* Billing Currency & FX Method（计费币种与汇率方式）
+* Backdated Policy（追溯天数与跨币种追溯）
+* Invoice Format & Delivery Channel（发票格式与渠道）
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Billing Management
+  └── Billing Configuration
 ```
+
+建议路由：
+
+```text
+/pricing-billing/billing/configuration
+```
+
+如果项目已有该路由和菜单，请保持兼容。
+
+---
+
+## 四、页面总体结构
+
+页面采用：
+
+> ProCard + StatisticCard + ProTable + Drawer
+
+布局。
+
+整体示意：
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Billing Configuration                                            │
-│ Configure billing parameters for clients across markets         │
+│ Configure billing behavior across clients and markets           │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Active Configs: 38]  [Markets: 5]  [Pending Review: 2]         │
+│ [Active Configs] [Markets] [Pending Review] [Cross-currency]   │
 ├──────────────────────────────────────────────────────────────────┤
-│ [Market ▼] [Client ▼] [Billing Cycle ▼] [Status ▼] [Search]    │
+│ [Market ▼] [Client ▼] [Cycle ▼] [Status ▼] [Search]            │
 ├──────────────────────────────────────────────────────────────────┤
-│ Billing Configurations                   [+ New Configuration]  │
-│                                                                  │
-│ Client  │ Market │ Cycle │ Charge Acct │ Currency │ Status │... │
-│ ACME    │ SG     │Monthly│ 001-SGD     │ SGD      │ Active │... │
-│ Daiwa   │ JP     │Monthly│ 002-JPY     │ JPY→SGD  │ Active │... │
-│ CCB     │ CN     │Qtly   │ 003-CNY     │ CNY→SGD  │ Active │... │
+│ Billing Configurations                    [+ New Configuration]  │
+│ Client │ Market │ Cycle │ Charge Account │ Currency │ Status    │
 └──────────────────────────────────────────────────────────────────┘
 ```
 
-配置详情/编辑 Drawer 分 5 个 Section：
-1. Client & Market
-2. Billing Cycle & Charge Account
-3. Consolidation Settings（跨产品/跨国家合并）
-4. Currency & FX Settings（多货币换算）
-5. Backdated Transaction Rules（追溯设置）
+---
+
+## 五、Mock 数据
+
+至少覆盖以下 APAC 市场：
+
+* Singapore
+* Hong Kong
+* China
+* Japan
+* Australia
+
+并体现：
+
+* 同币种计费（如 SGD -> SGD）
+* 跨币种计费（如 CNY -> SGD, JPY -> SGD）
+* 合并策略差异
+* 追溯窗口差异（如 30 / 60 / 90 天）
 
 ---
 
-## 3. 核心组件
+## 六、列表字段
 
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 统计卡 | `StatisticCard.Group` | Active、Markets、Pending |
-| 配置列表 | `ProTable` | |
-| 新增/编辑 | `Drawer` + `ProForm` | 5 Section，含 Switch 开关 |
-| 详情 | `Drawer` + `ProDescriptions` | 展示完整配置 |
+Billing Configuration 列表至少包含：
+
+1. Client
+2. Market
+3. Billing Cycle
+4. Charge Account
+5. Charge Account Currency
+6. Billing Currency
+7. FX Conversion Method
+8. Consolidate Products
+9. Consolidate Countries
+10. Max Backdate Days
+11. Invoice Format
+12. Delivery Channel
+13. Status
+14. Updated By
+15. Updated At
+16. Actions
+
+Actions：
+
+```text
+View
+Edit
+Disable / Enable
+```
 
 ---
 
-## 4. Mock 数据结构
+## 七、新增 / 编辑 Billing Configuration
 
-```typescript
-// mock/billing.ts
+点击：
 
-type BillingCycle = 'MONTHLY' | 'QUARTERLY' | 'ANNUAL' | 'ON_DEMAND';
+> New Configuration
 
+打开 Drawer。
+
+Drawer 建议分组：
+
+### 1. Client & Market
+
+```text
+Client
+Market
+```
+
+### 2. Billing Cycle & Account
+
+```text
+Billing Cycle
+Charge Account
+Charge Account Currency
+```
+
+### 3. Consolidation
+
+```text
+Consolidate Products
+Consolidate Countries
+```
+
+### 4. Currency & FX
+
+```text
+Billing Currency
+FX Conversion Method
+```
+
+### 5. Backdate & Delivery
+
+```text
+Max Backdate Days
+Allow Non-local Currency Backdate
+Invoice Format
+Delivery Channel
+Status
+```
+
+---
+
+## 八、Configuration Detail
+
+点击 View 打开详情 Drawer，建议使用：
+
+> ProDescriptions
+
+展示完整配置后，增加：
+
+### Billing Logic Preview
+
+```text
+Charge Currency: CNY
+Billing Currency: SGD
+FX Method: Monthly Average
+Backdate Window: 60 days
+Consolidation: Product=true, Country=false
+```
+
+说明该配置如何影响后续 Billing Run。
+
+---
+
+## 九、页面顶部增加区域概览
+
+建议统计卡：
+
+```text
+Active Configurations
+Markets Covered
+Pending Review
+Cross-currency Configurations
+```
+
+---
+
+## 十、与 Billing Run / Invoice 的业务关系
+
+页面中需体现：
+
+> Billing Configuration 决定 Run 的计费参数和换汇规则，Invoice 按配置输出格式与渠道。
+
+流程建议：
+
+```text
+Billing Configuration
+   ↓
+Run Parameter Resolution
+   ↓
+FX / Consolidation / Backdate Rules
+   ↓
+Invoice Generation & Delivery
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface BillingConfig {
   id: string;
   clientId: string;
   clientName: string;
   market: string;
-  billingCycle: BillingCycle;
-  // 计费账户
+  billingCycle: 'MONTHLY' | 'QUARTERLY' | 'ANNUAL' | 'ON_DEMAND';
   chargeAccountId: string;
-  chargeAccountCurrency: string;    // 'SGD' | 'HKD' | 'CNY' | 'JPY' | 'AUD'
-  // 合并计费
-  consolidateProducts: boolean;     // 跨产品合并
-  consolidateCountries: boolean;    // 跨国家合并（须同一 Legal Entity）
-  // 多货币
-  billingCurrency: string;          // 最终计费货币
+  chargeAccountCurrency: string;
+  consolidateProducts: boolean;
+  consolidateCountries: boolean;
+  billingCurrency: string;
   fxConversionMethod: 'SPOT' | 'MONTHLY_AVERAGE' | 'FIXED_RATE';
-  // 追溯设置
-  maxBackdateDays: number;          // 最大允许追溯天数，如 60
+  maxBackdateDays: number;
   allowNonLocalCurrencyBackdate: boolean;
-  // 发票交付
   invoiceFormat: 'PDF' | 'MT940' | 'ISO20022' | 'XLSX';
   deliveryChannel: 'EMAIL' | 'SFTP' | 'PORTAL' | 'SWIFT';
   status: 'ACTIVE' | 'INACTIVE' | 'PENDING_REVIEW';
@@ -92,101 +265,111 @@ interface BillingConfig {
 }
 ```
 
----
+Mock API：
 
-## 5. Mock API
-
-```
-GET    /api/billing/configurations              → { data: BillingConfig[], total: number }
-POST   /api/billing/configurations              → BillingConfig
-PUT    /api/billing/configurations/:id          → BillingConfig
-PATCH  /api/billing/configurations/:id/status   → BillingConfig
-GET    /api/billing/configurations/:id          → BillingConfig
+```text
+GET    /api/billing/configurations
+POST   /api/billing/configurations
+PUT    /api/billing/configurations/:id
+PATCH  /api/billing/configurations/:id/status
+GET    /api/billing/configurations/:id
 ```
 
 ---
 
-## 6. 业务逻辑
+## 十二、技术要求
 
-### 多货币展示
-当 `chargeAccountCurrency !== billingCurrency` 时，列表展示换算指示（如 `CNY → SGD`），详情中说明换算方式。
+必须遵循当前项目已有技术栈：
 
-### 追溯交易规则说明（UC-3 第 8 点）
-在详情 Drawer 的 "Backdated Transaction Rules" 区域展示：
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProTable
+* ProForm
+* ProDescriptions
+* ProCard
 
-```
-Max Backdated Days:       60 days
-Non-local Currency:       Allowed (converted at booking date FX rate)
-Re-calculation Window:    Last 2 billing cycles
-```
-
-### 发票格式
-不同市场默认不同格式（演示用）：
-
-| Market | Default Format | Default Channel |
-|--------|---------------|----------------|
-| Singapore | PDF / ISO20022 | Email / Portal |
-| China | PDF | SFTP |
-| Japan | MT940 | SWIFT |
-| Hong Kong | PDF / ISO20022 | Email |
-| Australia | PDF / XLSX | Email / Portal |
+不要引入新的 UI framework。不要升级依赖。
 
 ---
 
-## 7. 国际化 Key 列表
+## 十三、交互要求
 
+至少实现：
+
+### 查询
+
+```text
+Market
+Client
+Billing Cycle
+Status
+Keyword
 ```
-menu.billing.configuration
 
-pages.billing.config.title
-pages.billing.config.subTitle
-pages.billing.config.addConfig
-pages.billing.config.stat.active
-pages.billing.config.stat.markets
-pages.billing.config.stat.pendingReview
-pages.billing.config.col.client
-pages.billing.config.col.market
-pages.billing.config.col.cycle
-pages.billing.config.col.chargeAccount
-pages.billing.config.col.currency
-pages.billing.config.col.status
-pages.billing.config.col.actions
-pages.billing.config.cycle.monthly
-pages.billing.config.cycle.quarterly
-pages.billing.config.cycle.annual
-pages.billing.config.cycle.onDemand
-pages.billing.config.fxMethod.spot
-pages.billing.config.fxMethod.monthlyAvg
-pages.billing.config.fxMethod.fixed
-pages.billing.config.form.section.client
-pages.billing.config.form.section.billing
-pages.billing.config.form.section.consolidation
-pages.billing.config.form.section.currency
-pages.billing.config.form.section.backdate
-pages.billing.config.form.section.invoice
-pages.billing.config.form.client
-pages.billing.config.form.market
-pages.billing.config.form.billingCycle
-pages.billing.config.form.chargeAccount
-pages.billing.config.form.consolidateProducts
-pages.billing.config.form.consolidateCountries
-pages.billing.config.form.billingCurrency
-pages.billing.config.form.fxMethod
-pages.billing.config.form.maxBackdate
-pages.billing.config.form.allowNonLocal
-pages.billing.config.form.invoiceFormat
-pages.billing.config.form.deliveryChannel
+### 新增
+
+Add Configuration → Drawer → Submit → Mock 新增 → 列表刷新。
+
+### 编辑
+
+Edit → Drawer 回填 → Submit → Mock 更新 → 列表刷新。
+
+### 查看
+
+View → Detail Drawer（含 Billing Logic Preview）。
+
+### 启用 / 禁用
+
+Action → 确认弹窗 → 更新状态。
+
+---
+
+## 十四、Demo 重点
+
+这个页面不是为了展示“参数表单”，而是为了向银行客户展示：
+
+> **Centralized Billing Setup 可实现跨市场一致治理与本地差异化执行。**
+
+建议突出：
+
+```text
+Central Parameter Governance
+        ↓
+Market-specific Billing Behavior
+        ↓
+Reliable Billing Runs
+        ↓
+Compliant Invoice Delivery
 ```
 
 ---
 
-## 8. 文件结构
+## 十五、实现要求
 
-```
-src/pages/billing/configuration/
-├── index.tsx
-├── data.d.ts
-└── service.ts
+在开始修改代码之前：
 
-mock/billing.ts        ← 与 billing/run、billing/invoice 共用
-```
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有 Billing 页面的 ProTable / ProForm 模式。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
+
+然后实现：
+
+* 页面
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 新增
+* 编辑
+* 查看
+* 启用 / 禁用
+* Billing Logic Preview
+
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+
+**不要实现真实结算后端、真实清算核心、真实外部账户系统。当前目标是可用于客户演示的高质量 Demo。**

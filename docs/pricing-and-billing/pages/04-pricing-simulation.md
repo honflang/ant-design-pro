@@ -1,208 +1,375 @@
-# 04 — 定价模拟工具 Pricing Simulation
+﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
 
-**路由**：`/pricing-billing/pricing/simulation`  
-**组件路径**：`src/pages/pricing/simulation/index.tsx`  
-**菜单 i18n key**：`menu.pricing.simulation`  
-**所属用例**：UC-2（第 4 点）、UC-3（第 2 点）
+## 一、业务背景
 
----
+这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
 
-## 1. 页面目的
+系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
 
-定价模拟工具供客户经理/销售在**商务谈判前**快速测算不同定价方案的预期收入，支持多产品组合（Cash + Trade + FX）的联合模拟，并可将模拟结果一键发起审批。
+当前需要实现的是其中的：
 
-演示价值：
-- 展示 "Pre-deal simulation" 能力（UC-3 第 2 点）
-- 多产品联合模拟（Cash & Trade & GM 组合，UC-2 第 2 点）
-- 展示不同折扣/返佣方案对银行收入的影响
+> **Pricing Simulation（定价模拟）**
+
+重点展示平台在正式报价前，如何通过多产品场景模拟快速评估收入影响，并支撑后续审批决策。
+
+本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
 ---
 
-## 2. 页面布局
+## 二、本次需要实现的功能
 
+请新增或完善一个：
+
+> **Pricing Simulation（定价模拟）**
+
+页面。
+
+页面用于模拟不同折扣、返佣、交易量和产品组合下的定价结果。
+
+需要体现以下业务概念：
+
+* Client-level Scenario（客户级场景）
+* Multi-product Bundle（多产品组合）
+* Discount / Rebate（折扣与返佣）
+* Base Revenue vs Adjusted Revenue（调整前后收入）
+* Margin Estimation（预估利润率）
+* Scenario Comparison（方案对比）
+* Submit for Approval（提交审批）
+
+---
+
+## 三、菜单和路由
+
+请在现有菜单中确认并使用：
+
+```text
+Pricing Configuration
+  └── Pricing Simulation
 ```
+
+建议路由：
+
+```text
+/pricing-billing/pricing/simulation
+```
+
+如果项目已存在该路由和菜单，请保持现有结构，仅补强页面能力与提示词描述。
+
+---
+
+## 四、页面总体结构
+
+页面采用：
+
+> ProForm + ProCard + Statistic + ProTable
+
+左右分栏 + 底部历史记录布局。
+
+整体示意：
+
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │ Pricing Simulation                                               │
-│ Simulate pricing scenarios and assess expected revenue          │
+│ Simulate pricing scenarios and assess expected revenue impact   │
 ├──────────────────────┬──────────────────────────────────────────┤
-│  Simulation Setup    │  Results                                 │
-│  ─────────────────   │  ─────────────────────────────────────── │
-│  Client: [ACME Corp▼]│  ┌─── Revenue Summary ───────────────┐  │
-│  Market: [SG ▼]      │  │ Base Revenue    SGD 12,500/month   │  │
-│                      │  │ Adjusted Rev.   SGD 10,625/month   │  │
-│  Products:           │  │ Discount Applied        -15%       │  │
-│  ☑ Cash Management   │  │ Net Margin Est.         68%        │  │
-│  ☑ Trade Finance     │  └────────────────────────────────────┘  │
-│  ☑ FX Services       │                                          │
-│                      │  ┌─── Per Product Breakdown ──────────┐  │
-│  Scenario:           │  │ Cash Mgmt  SGD 6,000  → SGD 5,100  │  │
-│  Discount:  [-15% ▼] │  │ Trade Fin  SGD 5,000  → SGD 4,250  │  │
-│  Rebate:    [None ▼]  │  │ FX Svc     SGD 1,500  → SGD 1,275  │  │
-│  Volume:              │  └────────────────────────────────────┘  │
-│  Est. Tx/month: [500] │                                          │
-│                      │  ┌─── Scenario Comparison ────────────┐  │
-│  [Run Simulation]    │  │ Scenario A  -10%  SGD 11,250       │  │
-│  [Save as Draft]     │  │ Scenario B  -15%  SGD 10,625 ◀     │  │
-│  [Submit for Aprv]   │  │ Scenario C  -20%  SGD 10,000       │  │
-│                      │  └────────────────────────────────────┘  │
+│ Simulation Setup     │ Results                                  │
+│ Client / Market      │ Revenue Summary                          │
+│ Product Selection    │ Product Breakdown                        │
+│ Discount / Rebate    │ Scenario Comparison                      │
+│ Volume Assumption    │ Margin Estimate                          │
+│ [Run] [Save] [Submit]│                                          │
 └──────────────────────┴──────────────────────────────────────────┘
-│  Simulation History                         [Load Previous]     │
-│  #SIM-001 | ACME Corp | -15% | SGD 10,625 | 2026-07-15        │
+│ Simulation History                                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. 核心组件
+## 五、Mock 数据
 
-| 区域 | 组件 | 说明 |
-|------|------|------|
-| 左侧设置面板 | `ProForm` (layout=vertical, noinline) | 客户选择、产品多选、折扣/返佣参数 |
-| 右侧结果面板 | `ProCard` + `Statistic` | 收入汇总、Product Breakdown 表格 |
-| 方案对比 | `ProCard` + `Table` | 多方案横向比较 |
-| 历史记录 | `ProTable` 简化版 | 近 10 条模拟记录，可 Load |
-| 提交审批按钮 | `Button` primary | 触发 POST /api/pricing/approval-requests |
+至少准备：
+
+* 5 个 APAC 市场（SG/HK/CN/JP/AU）
+* 3 个产品（Cash / Trade / FX）
+* 3 个折扣对比场景（-10% / -15% / -20%）
+
+示例：
+
+```text
+Client: ACME Corp
+Market: Singapore
+Products: Cash Management + Trade Finance + FX Services
+Discount: -15%
+Base Revenue: SGD 12,500
+Adjusted Revenue: SGD 10,625
+Estimated Margin: 68%
+```
 
 ---
 
-## 4. Mock 数据结构
+## 六、列表字段
 
-```typescript
-// mock/pricing.ts (续)
+Simulation History 列表至少包含：
 
-interface SimulationRequest {
-  clientId: string;
-  market: string;
-  products: string[];             // ['Cash Management', 'Trade Finance', 'FX Services']
-  estimatedVolumePerMonth: number;
-  discountPercent?: number;       // -10, -15, -20 等
-  rebateType?: 'NONE' | 'VOLUME_BASED' | 'ONE_OFF';
-  rebateThreshold?: number;
-  specialConditions?: string;
-}
+1. Simulation ID
+2. Client
+3. Market
+4. Products
+5. Discount
+6. Base Revenue
+7. Adjusted Revenue
+8. Effective Discount
+9. Estimated Margin
+10. Status
+11. Created By
+12. Created At
+13. Actions
 
+Actions：
+
+```text
+View
+Load
+Submit for Approval
+```
+
+---
+
+## 七、新增 / 编辑 Simulation
+
+页面主交互集中在 Setup 面板，建议分组：
+
+### 1. Client Context
+
+```text
+Client
+Market
+Products (multi-select)
+```
+
+### 2. Pricing Parameters
+
+```text
+Discount Percent
+Rebate Type
+Rebate Threshold
+Special Conditions
+```
+
+### 3. Volume Assumptions
+
+```text
+Estimated Transactions per Month
+Expected Deal Size
+```
+
+主要动作：
+
+```text
+Run Simulation
+Save as Draft
+Submit for Approval
+```
+
+---
+
+## 八、Simulation Detail
+
+点击 View 打开详情 Drawer，建议使用：
+
+> ProDescriptions + ProCard + Table
+
+展示：
+
+```text
+Simulation Details
+Base Revenue
+Adjusted Revenue
+Discount Amount
+Estimated Margin
+Product Breakdown
+```
+
+并增加：
+
+### Scenario Comparison Preview
+
+```text
+Scenario A (-10%)
+Scenario B (-15%)
+Scenario C (-20%)
+```
+
+用于可视化不同策略影响。
+
+---
+
+## 九、页面顶部增加区域概览
+
+在页面顶部增加统计卡：
+
+```text
+Total Simulations
+Draft Simulations
+Submitted Simulations
+Average Discount
+```
+
+可补充：
+
+```text
+Estimated Revenue Impact
+```
+
+---
+
+## 十、与 Approval / Billing 的业务关系
+
+页面中需体现：
+
+> Simulation 是审批前的决策输入；审批通过后可生成生效定价并用于 Billing。
+
+流程建议：
+
+```text
+Simulation Input
+   ↓
+Revenue/Margin Outcome
+   ↓
+Scenario Selection
+   ↓
+Submit for Approval
+   ↓
+Approved Pricing
+   ↓
+Billing Run
+```
+
+---
+
+## 十一、Mock 数据与 API
+
+建议结构：
+
+```ts
 interface SimulationResult {
-  id: string;                     // 'SIM-001'
-  request: SimulationRequest;
-  baseRevenue: number;            // 应用折扣前的月度收入
-  adjustedRevenue: number;        // 应用折扣/返佣后
+  id: string;
+  baseRevenue: number;
+  adjustedRevenue: number;
   discountAmount: number;
   effectiveDiscountPercent: number;
   estimatedMarginPercent: number;
-  currency: string;
-  productBreakdown: ProductRevenue[];
-  scenarios: ScenarioComparison[];
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
   createdBy: string;
   createdAt: string;
 }
+```
 
-interface ProductRevenue {
-  product: string;
-  baseRevenue: number;
-  adjustedRevenue: number;
-}
+Mock API：
 
-interface ScenarioComparison {
-  scenarioName: string;          // 'Scenario A'
-  discountPercent: number;       // 10
-  adjustedRevenue: number;
-  isSelected: boolean;
-}
+```text
+POST   /api/pricing/simulations
+POST   /api/pricing/simulations/draft
+POST   /api/pricing/simulations/:id/submit
+GET    /api/pricing/simulations
+GET    /api/pricing/simulations/:id
 ```
 
 ---
 
-## 5. Mock API
+## 十二、技术要求
 
-```
-# 运行模拟（纯前端计算为主，接口返回基于参数的 Mock 结果）
-POST   /api/pricing/simulations              → SimulationResult
+必须遵循现有技术栈：
 
-# 保存草稿
-POST   /api/pricing/simulations/draft        → SimulationResult
+* React
+* TypeScript
+* Ant Design
+* Ant Design Pro
+* ProForm
+* ProTable
+* ProDescriptions
+* ProCard
 
-# 提交审批（保存并跳转至 /pricing-billing/pricing/approval）
-POST   /api/pricing/simulations/:id/submit   → { approvalRequestId: string }
-
-# 历史记录
-GET    /api/pricing/simulations              → { data: SimulationResult[], total: number }
-GET    /api/pricing/simulations/:id          → SimulationResult
-```
+不要引入新的 UI framework。不要升级依赖。
 
 ---
 
-## 6. 业务逻辑
+## 十三、交互要求
 
-### 模拟计算逻辑（前端 Mock 计算）
+至少实现：
 
+### 查询
+
+```text
+Client
+Market
+Status
+Date Range
+Keyword
 ```
-baseRevenue = sum(product.standardRate × estimatedVolumePerMonth)
-adjustedRevenue = baseRevenue × (1 - discountPercent / 100)
-if (rebateType === 'VOLUME_BASED' && volume > rebateThreshold):
-    adjustedRevenue -= rebateAmount
-estimatedMarginPercent = adjustedRevenue / baseRevenue × 假设毛利率 (80%)
-```
 
-实际 Demo 中，计算在前端完成，调用 Mock API 仅用于保存/读取记录。
+### 运行模拟
 
-### 方案对比自动生成
-点击 "Run Simulation" 后，自动生成 3 个场景：
-- Scenario A：输入折扣 + 5%（较宽松）
-- Scenario B：输入折扣（当前选择）
-- Scenario C：输入折扣 - 5%（较紧）
+Run Simulation → 前端 Mock 计算 → 展示结果与对比场景。
+
+### 保存草稿
+
+Save as Draft → 写入历史记录，状态为 DRAFT。
 
 ### 提交审批
-提交后跳转到 `/pricing-billing/pricing/approval`，并高亮新建的审批申请。
+
+Submit for Approval → 状态改为 SUBMITTED，并可联动审批页。
+
+### 加载历史
+
+Load 历史记录 → 回填参数并允许再次运行。
 
 ---
 
-## 7. 国际化 Key 列表
+## 十四、Demo 重点
 
-```
-menu.pricing.simulation
+这个页面不是为了展示“简单计算器”，而是为了向银行客户展示：
 
-pages.pricing.simulation.title
-pages.pricing.simulation.subTitle
-pages.pricing.simulation.form.client
-pages.pricing.simulation.form.market
-pages.pricing.simulation.form.products
-pages.pricing.simulation.form.volume
-pages.pricing.simulation.form.discount
-pages.pricing.simulation.form.rebate
-pages.pricing.simulation.form.conditions
-pages.pricing.simulation.btn.run
-pages.pricing.simulation.btn.saveDraft
-pages.pricing.simulation.btn.submitApproval
-pages.pricing.simulation.result.baseRevenue
-pages.pricing.simulation.result.adjustedRevenue
-pages.pricing.simulation.result.discountAmount
-pages.pricing.simulation.result.discountPercent
-pages.pricing.simulation.result.margin
-pages.pricing.simulation.result.breakdown.title
-pages.pricing.simulation.result.breakdown.product
-pages.pricing.simulation.result.breakdown.base
-pages.pricing.simulation.result.breakdown.adjusted
-pages.pricing.simulation.scenarios.title
-pages.pricing.simulation.scenarios.name
-pages.pricing.simulation.scenarios.discount
-pages.pricing.simulation.scenarios.revenue
-pages.pricing.simulation.history.title
-pages.pricing.simulation.history.load
-pages.pricing.simulation.msg.runSuccess
-pages.pricing.simulation.msg.savedDraft
-pages.pricing.simulation.msg.submitted
+> **基于数据的定价决策能力，可在提交审批前快速比较方案并量化影响。**
+
+UI 上建议突出：
+
+```text
+Scenario Modeling
+        ↓
+Revenue Impact Visibility
+        ↓
+Approval-ready Proposal
+        ↓
+Controlled Pricing Execution
 ```
 
 ---
 
-## 8. 文件结构
+## 十五、实现要求
 
-```
-src/pages/pricing/simulation/
-├── index.tsx
-├── data.d.ts
-└── service.ts
+在开始修改代码之前：
 
-mock/pricing.ts
-```
+1. 先检查当前项目目录结构。
+2. 检查现有 routes 配置方式。
+3. 检查现有菜单配置方式。
+4. 检查现有页面使用的 ProForm / ProTable 模式。
+5. 检查现有 Mock 数据组织方式。
+6. 尽可能复用已有组件和代码模式。
+
+然后实现：
+
+* 页面
+* 路由
+* 菜单
+* Mock 数据
+* 查询
+* 模拟运行
+* 场景对比
+* 草稿保存
+* 审批提交
+* 历史加载
+
+完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+
+**不要实现真实模型计算引擎、真实审批引擎、真实后端 API。当前目标是一个可用于客户演示的高质量 Demo。**
