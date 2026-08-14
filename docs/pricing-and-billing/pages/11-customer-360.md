@@ -1,362 +1,1426 @@
-﻿你现在正在一个基于 **Ant Design Pro（React + TypeScript + Ant Design）** 的后台管理系统中开发一个新的业务模块。
+﻿# Customer 360 — Agent Execution Specification
 
-## 一、业务背景
+## 0. Task Overview
 
-这是一个 **Wholesale Banking Pricing & Billing System（批发银行定价与计费系统）** 的 Demo。
+### Project
 
-系统面向银行内部用户，用于管理企业客户定价、计费和发票流程。
+当前项目是基于 **Ant Design Pro + React + TypeScript** 的 Wholesale Banking Pricing & Billing System Demo。
 
-当前需要实现的是其中的：
+### Task
 
-> **Customer 360 View（客户 360 视图）**
+实现：
 
-重点展示在单一客户视角下，如何聚合客户画像、当前定价、计费发票、收入表现与推荐建议，支持客户经理进行综合决策。
+> **Customer 360**
 
-本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
+用于展示 Wholesale Banking 企业客户的完整客户画像，包括：
+
+* 基础身份
+* 联系人
+* 合规状态
+* 存贷款关系
+* 交易关系
+* 客户贡献度
+* RFM 价值
+* 定价适配
+* 风险价值
+* 客户互动
+* 集团关联关系
+* 产品关系
+* 交叉销售机会
+* 外部客户信息
+
+### Important
+
+这是一个 **Demo 项目**。
+
+**不连接真实后端。**
+
+所有数据使用 Mock。
+
+不要实现真实：
+
+* AML
+* Credit Risk
+* Tax
+* External Data
+* AI
+* Banking Core Integration
+
+只需要通过 Mock 数据展示完整业务场景。
 
 ---
 
-## 二、本次需要实现的功能
+# 1. Execution Rules
 
-请新增或完善一个：
+Agent 开始执行前必须：
 
-> **Customer 360 View（客户 360 视图）**
+1. 检查项目目录结构。
+2. 检查现有 Ant Design Pro 版本。
+3. 检查路由配置。
+4. 检查菜单配置。
+5. 检查现有页面结构。
+6. 找到一个现有的 `ProTable` 页面作为实现参考。
+7. 找到一个现有的 `ProForm` / `Drawer` 页面作为实现参考。
+8. 找到项目现有 Mock 数据实现方式。
+9. **优先复用现有项目模式。**
+10. 不升级依赖。
+11. 不引入新的 UI Framework。
+12. 不修改无关页面。
 
-页面。
-
-需要体现以下业务概念：
-
-* Unified Customer Profile（客户统一画像）
-* Current Effective Pricing（当前生效定价）
-* Billing & Invoice Snapshot（计费与发票摘要）
-* Revenue & Performance Alerts（收入与绩效预警）
-* Product Recommendation（产品推荐，Mock AI）
-* Relationship-based Pricing Context（关系型定价上下文）
+如果项目已有类似 Customer / Client / Account 页面，应优先复用其组件和数据模式。
 
 ---
 
-## 三、菜单和路由
-
-请在现有菜单中确认并使用：
-
-```text
-Customer Management
-  └── Customer 360
-```
-
-建议路由：
+# 2. Route
 
 ```text
 /pricing-billing/customer/360
 ```
 
-详情建议：
+菜单：
 
 ```text
-/pricing-billing/customer/360/:clientId
+Customer Management
+└── Customer 360
 ```
 
-若项目中已采用 query 形式（如 `?clientId=`），请沿用既有模式。
+如果项目已经存在 `Customer Management`，直接添加子菜单。
 
 ---
 
-## 四、页面总体结构
+# 3. Page Layout
 
-页面建议分为两层：
-
-> 客户列表页 + 单客户 360 详情页
-
-整体示意：
+页面整体结构：
 
 ```text
-Customer List
-[Market][Segment][RM][Search]
-Client | Market | RM | MTD Revenue | Performance
-
-Customer 360 Detail
-Header KPI Cards
-Profile | Effective Pricing
-Billing History | Recent Invoices
-Recommendations
-Performance Alerts
+Customer 360
+│
+├── Customer Search
+│
+├── Customer Header
+│
+├── KPI Summary
+│
+└── Tabs
+    │
+    ├── Overview
+    ├── Identity & Compliance
+    ├── Banking Relationship
+    ├── Value & Pricing
+    ├── Interaction
+    └── Relationship Graph
 ```
 
-页面风格应突出“Relationship Management Cockpit”，而非普通信息页。
+使用：
+
+* ProCard
+* StatisticCard
+* ProDescriptions
+* Tabs
+* Timeline
+* Progress
+* Tag
+* Badge
+* Alert
+
+具体组件以项目已有组件为准。
 
 ---
 
-## 五、Mock 数据
+# 4. Customer Search
 
-至少覆盖客户：
+页面顶部提供 Customer Search。
 
-* Singapore Corporate（高价值）
-* Japan FI（风险偏高）
-* China Corporate（多产品）
-* Australia SME（低活跃）
+支持：
 
-并体现：
+```text
+Customer Name
+Customer ID
+Unified Social Credit Code
+Business Registration Number
+```
 
-* 不同市场收入与币种
-* 不同定价层级（P2/P3/P4）
-* 不同绩效状态（On Track / At Risk / Under-performing）
+Mock 客户：
+
+```text
+ABC Global Holdings
+CUST-000128
+China / Singapore
+Strategic Corporate
+```
+
+```text
+Pacific Trading Group
+CUST-000256
+Singapore / Hong Kong
+Large Corporate
+```
+
+```text
+Sakura Manufacturing Co.
+CUST-000384
+Japan
+Large Corporate
+```
+
+选择客户后刷新整个 Customer 360 页面。
 
 ---
 
-## 六、列表字段
+# 5. Customer Header
 
-客户列表至少包含：
-
-1. Client ID
-2. Client Name
-3. Market
-4. Segment
-5. RM Name
-6. MTD Revenue
-7. YTD Revenue
-8. Active Deals
-9. Product Count
-10. Outstanding Invoices
-11. Performance Status
-12. Actions
-
-360 详情中 Current Pricing 至少包含：
-
-1. Product
-2. Base Rate
-3. Applied Rate
-4. Discount / Surcharge
-5. Rule Scope
-6. Price Point Link
-7. Pricing Rule Link
-
-Actions：
+显示：
 
 ```text
-View 360
-View Price Book
-View Pricing Rule
+Customer Name
+Customer ID
+Customer Segment
+Registration Country
+Operating Markets
+Relationship Manager
+Customer Since
+Status
+```
+
+示例：
+
+```text
+ABC Global Holdings
+
+Customer ID
+CUST-000128
+
+Segment
+Strategic Corporate
+
+Registration
+China
+
+Operating Markets
+China · Singapore · Hong Kong
+
+Relationship Manager
+Zhang San
+
+Customer Since
+2014
+
+Status
+Active
+```
+
+Header 操作：
+
+```text
+[Pricing]
+[Billing]
+[Group View]
+```
+
+其中：
+
+### Pricing
+
+跳转到：
+
+```text
+Pricing Simulation
+```
+
+并携带当前 Customer ID。
+
+### Billing
+
+跳转到：
+
+```text
+Billing Management
+```
+
+并携带当前 Customer ID。
+
+### Group View
+
+切换：
+
+```text
+Relationship Graph
 ```
 
 ---
 
-## 七、新增 / 编辑（关系动作）
+# 6. KPI Summary
 
-该页以“查看与管理动作”为主，不强调新增主数据。
-
-建议支持：
-
-### 1. Relationship Notes（可选）
+Header 下方显示：
 
 ```text
-Add RM Note
-Flag Follow-up
+Total Revenue
+$4.82M
 ```
-
-### 2. Recommendation Action（可选）
 
 ```text
-Mark Recommendation as Accepted / Ignored
+Risk-adjusted Profit
+$2.31M
 ```
 
-用于演示客户经理工作流闭环。
+```text
+Deposit Balance
+$420M
+```
+
+```text
+Loan Balance
+$280M
+```
+
+```text
+Annual Transactions
+1.28M
+```
+
+```text
+Customer Value
+VIP Core
+```
+
+支持显示同比变化：
+
+```text
++12.4% YoY
+```
 
 ---
 
-## 八、Customer 360 Detail
+# 7. Overview Tab
 
-点击客户进入详情，建议使用：
+Overview 是 Customer 360 的默认 Tab。
 
-> ProDescriptions + StatisticCard + ProCard + ProList
+---
+
+## 7.1 Customer Health
+
+显示：
+
+```text
+Relationship Health
+92 / 100
+
+Revenue Growth
++12.4%
+
+Product Penetration
+68%
+
+Customer Value
+VIP Core
+
+Risk Level
+Low
+```
+
+使用 Progress / Statistic / Tag。
+
+---
+
+## 7.2 Business Summary
+
+显示：
+
+```text
+Industry
+Manufacturing
+
+Annual Revenue
+$8.2B
+
+Banking Relationship
+12 Years
+
+Operating Countries
+5
+
+Products Held
+8
+
+Relationship Manager
+Zhang San
+```
+
+使用 `ProDescriptions`。
+
+---
+
+## 7.3 Revenue & Contribution
+
+使用简单折线图或项目已有图表组件。
+
+展示最近 12 个月：
+
+```text
+Revenue
+Cost
+Contribution
+Risk-adjusted Contribution
+```
+
+Mock 数据即可。
+
+---
+
+## 7.4 Product Portfolio
 
 展示：
 
 ```text
-Client Profile
-Effective Pricing Summary
-Billing History (6 months)
-Recent Invoices
-Performance Alerts
+Cash Management              Active
+FX                           Active
+Cross-border Payment         Active
+Trade Finance                Active
+Lending                      Active
+Supply Chain Finance         Opportunity
+Interest Rate Hedging        Opportunity
 ```
 
-并增加：
+Active 使用成功状态。
 
-### Product Recommendation Preview
-
-```text
-Recommendation Type
-Potential Benefit
-Priority
-Rationale
-```
-
-推荐逻辑可由 Mock 规则生成，不需真实 AI 服务。
+Opportunity 使用 warning / processing 状态。
 
 ---
 
-## 九、页面顶部增加区域概览
+## 7.5 Recent Activities
 
-在详情页顶部增加 KPI：
+使用 Timeline。
 
-```text
-MTD Revenue
-YTD Revenue
-Active Deals
-Products in Use
-Outstanding Invoices
-```
-
-列表页可增加：
+Mock：
 
 ```text
-Total Clients
-At-risk Clients
+2026-08-12
+Pricing proposal approved
+
+2026-08-10
+Cross-border payment volume increased
+
+2026-08-05
+Customer requested fee adjustment
+
+2026-07-28
+Trade Finance facility renewed
 ```
 
 ---
 
-## 十、与 Pricing / Billing / Performance 的业务关系
+## 7.6 Customer Insights
 
-页面中需体现：
+增加一个 Analytics / AI 风格 Card。
 
-> Customer 360 连接定价、计费、绩效三条主线，提供单一客户的可执行决策视图。
-
-流程建议：
+示例：
 
 ```text
-Pricing Setup
-   ↓
-Billing & Invoice Outcome
-   ↓
-Customer 360 Insights
-   ↓
-RM Action / Recommendation
-   ↓
-Performance Improvement
+Customer Insight
+
+Pricing Opportunity
+
+Customer's current FX pricing is above
+the historical acceptable threshold.
+
+Recommended Action
+
+Review FX pricing for high-volume transactions.
+
+Estimated Annual Revenue Impact
+
++$180K
+```
+
+明确：
+
+> 数据为 Mock Analytics / Gen AI 数据。
+
+不实现真实 AI。
+
+---
+
+# 8. Identity & Compliance Tab
+
+---
+
+## 8.1 Basic Identity
+
+使用 `ProDescriptions`。
+
+字段：
+
+```text
+Customer ID
+Customer Name
+Unified Social Credit Code
+Business Registration Number
+Registration Country
+Registration Place
+Operating Address
+Industry
+Industry Code
+Foreign Ownership
 ```
 
 ---
 
-## 十一、Mock 数据与 API
+## 8.2 Contacts
 
-建议结构：
+显示：
 
-```ts
-interface Customer {
+```text
+Primary Contact
+Finance Contact
+Operations Contact
+```
+
+每个联系人：
+
+```text
+Name
+Mobile
+Email
+WeChat
+```
+
+使用 Card。
+
+---
+
+## 8.3 Compliance
+
+显示 4 个状态卡：
+
+### AML Risk
+
+```text
+Low
+Medium
+High
+```
+
+### Blacklist
+
+```text
+Clear
+Potential Match
+Confirmed
+```
+
+### Cross-border Trading
+
+```text
+Enabled
+Restricted
+Disabled
+```
+
+### FX Qualification
+
+```text
+Valid
+Expiring Soon
+Expired
+```
+
+示例：
+
+```text
+AML Risk
+Low
+
+Blacklist
+Clear
+
+Cross-border Trading
+Enabled
+
+FX Qualification
+Valid
+Expires: 2027-06-30
+```
+
+状态颜色遵循项目现有 Design Token，不要硬编码颜色。
+
+---
+
+# 9. Banking Relationship Tab
+
+Tab 内部分成四个 Card / Section：
+
+```text
+Deposits & Loans
+Transaction Banking
+Cross-border Payments
+Contribution
+```
+
+---
+
+## 9.1 Deposits & Loans
+
+KPI：
+
+```text
+Deposit Balance
+$420M
+
+Loan Balance
+$280M
+
+Loan Utilization
+72%
+
+Average Deposit Balance
+$380M
+```
+
+Pricing：
+
+```text
+FTP Benchmark
+3.42%
+
+Average Deposit Rate
+2.81%
+
+Average Lending Rate
+4.18%
+```
+
+增加 12 个月：
+
+```text
+Deposit Balance
+Loan Balance
+```
+
+趋势图。
+
+---
+
+## 9.2 Transaction Banking
+
+显示：
+
+```text
+Settlement Transactions
+1,280,000
+
+Intermediary Services
+12
+
+Annual Fees
+$820K
+
+Fee Discount
+8.5%
+```
+
+手续费趋势：
+
+```text
+2024
+$620K
+
+2025
+$740K
+
+2026 YTD
+$820K
+```
+
+---
+
+## 9.3 Cross-border Payments
+
+显示：
+
+```text
+Annual Transactions
+320,820
+
+Total Transaction Value
+$4.2B
+
+Preferred Channel
+SWIFT
+
+Peak Transaction Period
+09:00 - 12:00
+```
+
+交易路线：
+
+```text
+China → Singapore
+Singapore → China
+Hong Kong → China
+Singapore → Australia
+```
+
+---
+
+## 9.4 Contribution
+
+显示：
+
+```text
+Gross Revenue
+$4.82M
+
+Operating Cost
+$1.28M
+
+Credit Cost
+$420K
+
+Economic Capital Cost
+$380K
+
+Risk-adjusted Contribution
+$2.31M
+```
+
+重点突出：
+
+```text
+Risk-adjusted Contribution
+$2.31M
+```
+
+---
+
+# 10. Value & Pricing Tab
+
+这是 Customer 360 与 Pricing Management 的核心连接。
+
+---
+
+## 10.1 RFM Value
+
+显示：
+
+```text
+Recency
+3 days ago
+
+Frequency
+1.28M transactions / year
+
+Monetary
+$2.31M contribution
+```
+
+客户等级：
+
+```text
+★★★★★
+VIP Core Customer
+```
+
+---
+
+## 10.2 Pricing Sensitivity
+
+显示：
+
+```text
+Interest Rate Sensitivity
+High
+
+Fee Sensitivity
+Medium
+
+Price Elasticity
+Medium
+
+Acceptable Fee Threshold
+≤ 12 bps
+```
+
+---
+
+## 10.3 Historical Negotiation
+
+使用 ProTable。
+
+字段：
+
+```text
+Date
+Product
+Requested Price
+Approved Price
+Discount
+Status
+```
+
+Mock：
+
+```text
+2026-07
+FX Fee
+15 bps
+12 bps
+20%
+Approved
+```
+
+```text
+2026-04
+Payment Fee
+10 bps
+9 bps
+10%
+Approved
+```
+
+---
+
+## 10.4 Customized Pricing
+
+显示：
+
+```text
+Customized Pricing
+Enabled
+
+Pricing Package
+Strategic Corporate Package
+
+Discount
+8.5%
+
+Valid Until
+2026-12-31
+```
+
+按钮：
+
+```text
+[Open Pricing Simulation]
+```
+
+点击：
+
+```text
+/customer/360
+        ↓
+Pricing Simulation
+```
+
+当前 Customer 自动带入。
+
+---
+
+## 10.5 Risk Value
+
+显示：
+
+```text
+Credit Rating
+AA
+
+Probability of Default
+0.18%
+
+Risk Mitigation
+Collateral + Guarantee
+
+Economic Capital
+$18.2M
+
+Risk-adjusted Return
+13.8%
+```
+
+突出：
+
+```text
+Risk-adjusted Customer Value
+$1.84M
+```
+
+---
+
+# 11. Interaction Tab
+
+使用 Timeline。
+
+顶部过滤：
+
+```text
+All
+Marketing
+RM
+Customer Service
+Pricing
+Billing
+Complaint
+```
+
+Mock：
+
+```text
+2026-08-12
+Pricing Proposal
+
+RM submitted new FX pricing proposal.
+```
+
+```text
+2026-08-10
+RM Meeting
+
+Discussed cross-border payment pricing.
+```
+
+```text
+2026-08-05
+Billing Request
+
+Customer requested monthly billing.
+```
+
+```text
+2026-07-28
+Product Recommendation
+
+Trade Finance product recommended.
+```
+
+---
+
+# 12. Relationship Graph Tab
+
+目标：
+
+> 展示集团客户、母子公司、实际控制人和关联公司的关系。
+
+使用项目已有图形组件。
+
+如果项目没有图谱组件：
+
+**不要新增重量级 Graph Library。**
+
+可以使用：
+
+* Card
+* Tree
+* 简单 CSS 节点
+* Ant Design Tree
+
+实现 Demo。
+
+---
+
+## 12.1 Mock Structure
+
+```text
+John Smith
+Actual Owner
+       │
+       ▼
+ABC Holdings
+       │
+ ┌─────┼─────┐
+ ▼     ▼     ▼
+ABC   ABC   ABC
+China HK    Singapore
+```
+
+---
+
+## 12.2 Group Exposure
+
+右侧：
+
+```text
+Group Credit Exposure
+$680M
+
+Group Credit Limit
+$800M
+
+Utilization
+85%
+```
+
+分公司：
+
+```text
+ABC China
+$320M
+
+ABC Hong Kong
+$140M
+
+ABC Singapore
+$120M
+
+Others
+$100M
+```
+
+---
+
+## 12.3 Product Relationship
+
+显示：
+
+```text
+Cash Management
+Active
+
+FX
+Active
+
+Cross-border Payment
+Active
+
+Trade Finance
+Active
+
+Lending
+Active
+```
+
+---
+
+## 12.4 Cross-sell Opportunities
+
+```text
+Supply Chain Finance
+Opportunity Score: 82%
+Estimated Revenue: +$320K
+```
+
+```text
+Interest Rate Hedging
+Opportunity Score: 64%
+Estimated Revenue: +$180K
+```
+
+按钮：
+
+```text
+[Create Opportunity]
+```
+
+点击只需要显示成功 Message / Mock 状态即可。
+
+---
+
+# 13. External Intelligence
+
+可以放在 Overview 底部，或者 Relationship Graph 页面底部。
+
+显示：
+
+```text
+Financial Health
+Stable
+
+Industry Outlook
+Positive
+
+Company Registration
+No Major Change
+
+Public Sentiment
+Positive
+```
+
+增加：
+
+```text
+Latest Update
+2026-08-12
+```
+
+所有数据均为 Mock。
+
+---
+
+# 14. Data Model
+
+建立统一的数据类型。
+
+```typescript
+interface Customer360 {
   id: string;
-  name: string;
-  market: string;
-  segment: 'Corporate' | 'Financial Institution' | 'SME' | 'Government';
-  rmName: string;
-  mtdRevenue: number;
-  ytdRevenue: number;
-  activeDeals: number;
-  products: string[];
-  outstandingInvoices: number;
-  performanceStatus: 'ON_TRACK' | 'AT_RISK' | 'UNDER_PERFORMING';
+  customerName: string;
+  customerType: string;
+  status: CustomerStatus;
+
+  identity: CustomerIdentity;
+
+  contacts: CustomerContact[];
+
+  compliance: ComplianceProfile;
+
+  banking: BankingRelationship;
+
+  value: CustomerValue;
+
+  pricing: PricingProfile;
+
+  risk: RiskProfile;
+
+  interactions: CustomerInteraction[];
+
+  relationships: CustomerRelationship[];
+
+  products: CustomerProduct[];
+
+  opportunities: CustomerOpportunity[];
+
+  externalIntelligence: ExternalIntelligence;
 }
 ```
 
-Mock API：
+相关类型至少包括：
+
+```typescript
+interface CustomerIdentity {}
+
+interface CustomerContact {}
+
+interface ComplianceProfile {}
+
+interface BankingRelationship {}
+
+interface CustomerValue {}
+
+interface PricingProfile {}
+
+interface RiskProfile {}
+
+interface CustomerInteraction {}
+
+interface CustomerRelationship {}
+
+interface CustomerProduct {}
+
+interface CustomerOpportunity {}
+
+interface ExternalIntelligence {}
+```
+
+不要把所有字段全部定义为 `any`。
+
+---
+
+# 15. Mock Data
+
+至少实现三个 Customer。
+
+---
+
+## Customer 1
 
 ```text
-GET    /api/customers
-GET    /api/customers/:id
-GET    /api/customers/:id/pricing-summary
-GET    /api/customers/:id/billing-history
-GET    /api/customers/:id/recent-invoices
-GET    /api/customers/:id/recommendations
-GET    /api/customers/:id/alerts
+ABC Global Holdings
+
+ID:
+CUST-000128
+
+Country:
+China / Singapore
+
+Segment:
+Strategic Corporate
+
+Risk:
+Low
+
+Value:
+VIP Core
+
+Revenue:
+$4.82M
+
+Deposit:
+$420M
+
+Loan:
+$280M
 ```
 
 ---
 
-## 十二、技术要求
-
-必须遵循当前项目已有技术栈：
-
-* React
-* TypeScript
-* Ant Design
-* Ant Design Pro
-* ProTable
-* ProDescriptions
-* ProCard
-* ProList
-
-不要引入新的 UI framework。不要升级依赖。
-
----
-
-## 十三、交互要求
-
-至少实现：
-
-### 查询
+## Customer 2
 
 ```text
-Market
-Segment
-RM
-Performance Status
-Keyword
-```
+Pacific Trading Group
 
-### 查看 360
+ID:
+CUST-000256
 
-点击客户进入详情页。
+Country:
+Singapore / Hong Kong
 
-### 定价溯源跳转
+Segment:
+Large Corporate
 
-从 360 详情跳转到 Price Book / Pricing Rules 对应记录。
+Risk:
+Medium
 
-### 预警查看
+Value:
+VIP
 
-展示该客户关联预警并支持进入 Revenue / Deal 页面。
-
----
-
-## 十四、Demo 重点
-
-这个页面不是为了展示“客户详情页”，而是为了向银行客户展示：
-
-> **以客户为中心的一站式定价与计费运营视图。**
-
-建议突出：
-
-```text
-Unified Customer Data
-        ↓
-Pricing/Billing Context
-        ↓
-Insight & Recommendation
-        ↓
-RM Actionability
+Revenue:
+$2.16M
 ```
 
 ---
 
-## 十五、实现要求
+## Customer 3
 
-在开始修改代码之前：
+```text
+Sakura Manufacturing Co.
 
-1. 先检查当前项目目录结构。
-2. 检查现有 routes 配置方式。
-3. 检查现有菜单配置方式。
-4. 检查现有 Customer 模块页面风格。
-5. 检查现有 Mock 数据组织方式。
-6. 尽可能复用已有组件和代码模式。
+ID:
+CUST-000384
 
-然后实现：
+Country:
+Japan
 
-* 页面（列表 + 详情）
-* 路由
-* 菜单
-* Mock 数据
-* 查询
-* 360 详情展示
-* 定价溯源跳转
-* 推荐与预警区
+Segment:
+Large Corporate
 
-完成后确保 TypeScript 编译没有明显错误，页面能够正常运行。
+Risk:
+Low
 
-**不要实现真实 CRM、真实 AI 推荐服务、真实后端 API。当前目标是可用于客户演示的高质量 Demo。**
+Value:
+Core
+
+Revenue:
+$1.84M
+```
+
+不同 Customer 切换后：
+
+* Header
+* KPI
+* Overview
+* Banking
+* Pricing
+* Risk
+* Interaction
+* Relationship
+
+必须跟随 Customer 变化。
+
+---
+
+# 16. Cross-module Navigation
+
+必须实现以下联动。
+
+## Customer → Pricing
+
+```text
+Customer 360
+    ↓
+Value & Pricing
+    ↓
+Open Pricing Simulation
+    ↓
+Pricing Simulation
+```
+
+传递：
+
+```text
+customerId
+```
+
+---
+
+## Customer → Billing
+
+```text
+Customer 360
+    ↓
+Banking Relationship
+    ↓
+View Billing
+    ↓
+Billing Management
+```
+
+传递：
+
+```text
+customerId
+```
+
+---
+
+## Customer → Group
+
+```text
+Customer 360
+    ↓
+Group View
+    ↓
+Relationship Graph
+```
+
+---
+
+# 17. UI Requirements
+
+整体视觉：
+
+> Enterprise Banking / Financial Platform
+
+要求：
+
+* 信息密度适中
+* 清晰的层级
+* 不要过度使用 Card
+* 不要做成普通 CRM
+* KPI 突出
+* Risk / Compliance 状态明显
+* Pricing / Value 数据突出
+* 支持 Desktop 优先
+* 页面需要适合客户现场 Demo
+
+不要：
+
+* 添加新的 UI Framework
+* 添加大量动画
+* 添加无意义的渐变
+* 使用过多彩色装饰
+* 创建复杂 3D 图表
+
+---
+
+# 18. Priority
+
+## P0 — 必须完成
+
+```text
+Customer Search
+Customer Header
+KPI Summary
+
+Overview
+Identity & Compliance
+Banking Relationship
+Value & Pricing
+```
+
+尤其保证：
+
+```text
+Customer
+   ↓
+Value
+   ↓
+Pricing
+```
+
+这个核心路径完整。
+
+---
+
+## P1 — 第二优先级
+
+```text
+Interaction
+Relationship Graph
+Cross-sell Opportunities
+External Intelligence
+```
+
+---
+
+## P2 — 可选
+
+```text
+真实 AI
+真实外部数据
+真实工商信息
+真实舆情
+真实 Graph Database
+真实银行系统 API
+```
+
+全部不要实现。
+
+---
+
+# 19. Acceptance Criteria
+
+完成后必须满足：
+
+### 页面
+
+* [ ] `/customer/360` 可以访问
+* [ ] 菜单正确显示
+* [ ] 默认 Customer 正确加载
+* [ ] Customer Search 可切换客户
+* [ ] Header 正确显示
+* [ ] KPI 正确显示
+
+### Overview
+
+* [ ] Customer Health
+* [ ] Business Summary
+* [ ] Revenue Chart
+* [ ] Product Portfolio
+* [ ] Recent Activities
+* [ ] Customer Insights
+
+### Identity
+
+* [ ] Basic Identity
+* [ ] Contacts
+* [ ] AML
+* [ ] Blacklist
+* [ ] Cross-border Permission
+* [ ] FX Qualification
+
+### Banking
+
+* [ ] Deposits
+* [ ] Loans
+* [ ] FTP
+* [ ] Transaction Banking
+* [ ] Cross-border Payment
+* [ ] Contribution
+
+### Pricing
+
+* [ ] RFM
+* [ ] Pricing Sensitivity
+* [ ] Historical Negotiation
+* [ ] Customized Pricing
+* [Risk Value]
+* [Open Pricing Simulation]
+
+### Interaction
+
+* [ ] Timeline
+* [ ] Filter
+
+### Relationship
+
+* [ ] Group Structure
+* [ ] Group Exposure
+* [ ] Product Relationship
+* [Cross-sell Opportunity]
+
+### Technical
+
+* [ ] TypeScript 无明显错误
+* [ ] 使用 Mock 数据
+* [ ] 不依赖真实后端
+* [ ] 不修改无关模块
+* [ ] 不新增不必要依赖
+* [ ] 遵循现有 Ant Design Pro 项目结构
