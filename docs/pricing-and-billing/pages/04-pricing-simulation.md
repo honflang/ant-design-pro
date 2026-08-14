@@ -36,6 +36,8 @@
 * Scenario Comparison（方案对比）
 * Submit for Approval（提交审批）
 
+本页面的模拟上下文来自 **Customer 360**。Pricing Simulation 不重复维护客户主数据，而是读取客户全景中的定价相关维度，在提交审批前形成可解释的客户级报价建议。
+
 ---
 
 ## 三、菜单和路由
@@ -81,6 +83,103 @@ Pricing Configuration
 └──────────────────────┴──────────────────────────────────────────┘
 │ Simulation History                                            │
 └─────────────────────────────────────────────────────────────────┘
+```
+
+## 四-A、Customer 360 定价上下文
+
+### 1. 设计原则
+
+Pricing Simulation 与 Customer 360 的关系如下：
+
+```text
+Customer 360 Profile
+   ↓ 读取客户画像与关系数据
+Pricing Simulation Context
+   ↓ 调整可模拟的价格参数与场景假设
+Revenue / Margin / Risk Outcome
+   ↓ 选择方案
+Approval-ready Pricing Proposal
+   ↓ 审批通过后
+Effective Pricing → Billing Run
+```
+
+页面需要区分两类字段：
+
+| 类型 | 说明 | 页面行为 |
+|---|---|---|
+| Customer 360 Context | 客户身份、关系规模、风险、价值、交易行为和历史定价 | 只读展示；标记数据来源和快照时间 |
+| Simulation Inputs | 折扣、返佣、产品组合、交易量和特殊条件 | 可编辑；仅影响当前模拟，不直接修改客户主数据 |
+
+### 2. Customer 360 维度映射
+
+选择客户后，系统从 Customer 360 加载以下定价上下文：
+
+| Customer 360 维度 | 关键字段 | 在模拟中的用途 |
+|---|---|---|
+| Identity & Segment | Customer ID、客户类型、行业、注册国家、经营市场 | 确定客户级场景、适用市场和默认定价策略 |
+| Relationship Health | Relationship Health、Customer Since、Relationship Manager | 作为关系稳定性和审批说明的背景信息 |
+| Product Portfolio | 已持有产品、产品状态、交叉销售机会 | 预选已有产品，提示可加入的交叉销售产品 |
+| Banking Relationship | 存款余额、贷款余额、交易量、交易金额、Fee Discount | 支撑交易量、客户贡献度和产品组合假设的默认值 |
+| Value & Contribution | Gross Revenue、Risk-adjusted Contribution、RFM Value、Customer Value | 评估调整后收入是否改善客户价值与关系贡献 |
+| Pricing Profile | Customized Pricing、历史折扣、可接受费率阈值、价格敏感度 | 识别当前方案是否超出历史或客户可接受范围 |
+| Risk & Compliance | Credit Rating、Risk Level、PD、AML Risk、FX Qualification、跨境权限 | 限制不适用的产品/市场，并影响预估利润率与审批提示 |
+| Group Relationship | 集团授信敞口、额度使用率、母子公司关系 | 支持集团级定价视角和集中度风险提示 |
+| Interaction & Insights | 最近议价、客户反馈、Pricing Opportunity、推荐行动 | 为特殊条件和方案说明提供可追溯的业务依据 |
+
+### 3. 页面顶部客户上下文卡
+
+在 `Simulation Setup` 之前增加 `Customer 360 Context` 摘要区，至少显示：
+
+```text
+Client: ABC Global Holdings             Customer ID: CUST-000128
+Segment: Strategic Corporate             Customer Value: VIP Core
+Relationship Health: 92 / 100             Risk Level: Low / Credit Rating: AA
+Annual Revenue: USD 4.82M                 Risk-adjusted Contribution: USD 2.31M
+Deposit / Loan: USD 420M / USD 280M       Annual Transactions: 1.28M
+Current Pricing: Strategic Corporate Package, 8.5% discount
+Pricing Sensitivity: Interest Rate High / Fee Medium / Acceptable Fee ≤ 12 bps
+Data Snapshot: 2026-08-12  |  View Customer 360
+```
+
+该区域只展示客户画像快照，不允许直接编辑。提供 `View Customer 360` 操作，跳转到 `/pricing-billing/customer/360?customerId=<id>`，并保留当前客户。
+
+### 4. 客户上下文对模拟的约束
+
+Mock Demo 中采用以下可解释规则，不实现真实定价或风险引擎：
+
+* Customer 360 中状态为 `Opportunity` 的产品可以加入模拟，但应显示为交叉销售机会，并展示预估增量收入。
+* 客户已持有的产品默认勾选；不满足 `Cross-border Trading` 或 `FX Qualification` 的产品/市场组合显示警告，并禁止提交审批。
+* 当前客户的历史折扣、Customized Pricing 和 Acceptable Fee Threshold 作为参考线；超出参考线时显示 `Outside historical range` 或 `Requires justification`。
+* `Risk-adjusted Contribution` 与 `Credit Rating` 只作为结果解释和审批提示输入，不由本页面修改。
+* 集团客户可切换 `Client-level` 与 `Group-aware` 视角；后者显示集团敞口、额度使用率和子公司覆盖范围，但本次 Demo 不执行真实集团额度分摊。
+* 客户互动和 Mock Insight 可生成特殊条件建议，例如“高交易量客户可考虑 FX fee review”，但不自动改变折扣。
+
+### 5. 客户驱动的场景维度
+
+除原有 `-10% / -15% / -20%` 折扣场景外，场景对比至少包含以下客户维度：
+
+```text
+Scenario A: Current / Baseline Pricing
+Scenario B: Relationship Investment
+  - higher product penetration or cross-sell volume
+  - moderate discount within historical range
+Scenario C: Aggressive Retention
+  - larger discount or rebate
+  - explicit margin and risk warning
+```
+
+每个场景需要显示：
+
+```text
+Client Context Used
+Products / Market
+Volume Assumption
+Discount + Rebate
+Base Revenue → Adjusted Revenue
+Risk-adjusted Contribution Impact
+Estimated Margin
+Customer Value / Pricing Threshold Check
+Approval Recommendation
 ```
 
 ---
@@ -147,6 +246,8 @@ Market
 Products (multi-select)
 ```
 
+选择 `Client` 后自动加载 Customer 360 Context。客户级上下文包括客户分层、客户价值、风险等级、关系健康度、存贷款关系、交易量、现有产品、历史定价和集团关系；这些字段在 Setup 面板中以只读方式展示，并支持跳转 Customer 360。
+
 ### 2. Pricing Parameters
 
 ```text
@@ -162,6 +263,8 @@ Special Conditions
 Estimated Transactions per Month
 Expected Deal Size
 ```
+
+默认值优先从 Customer 360 的 Annual Transactions、Annual Transaction Value、Settlement Transactions 和产品历史使用量推导。用户修改后只影响当前模拟结果。
 
 主要动作：
 
@@ -188,6 +291,10 @@ Adjusted Revenue
 Discount Amount
 Estimated Margin
 Product Breakdown
+Customer 360 Context Snapshot
+Risk-adjusted Contribution Impact
+Pricing Threshold Check
+Approval Recommendation
 ```
 
 并增加：
@@ -201,6 +308,15 @@ Scenario C (-20%)
 ```
 
 用于可视化不同策略影响。
+
+方案对比中增加 Customer 360 维度列：
+
+```text
+Scenario | Customer Value | Products / Penetration | Revenue Impact
+         | Margin | Risk-adjusted Contribution | Threshold / Risk Flag
+```
+
+结果区应明确标识：`Mock calculation based on Customer 360 snapshot`，避免 Demo 用户误认为这是实时银行定价或风险决策结果。
 
 ---
 
@@ -254,16 +370,49 @@ Billing Run
 ```ts
 interface SimulationResult {
   id: string;
+   customerId: string;
+   clientName: string;
+   customerSegment: string;
+   customerValue: string;
+   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH';
+   relationshipHealthScore: number;
+   market: string;
+   products: string[];
+   volumeAssumption: {
+      transactionsPerMonth: number;
+      expectedDealSize: number;
+   };
+   customer360Snapshot: {
+      capturedAt: string;
+      annualRevenue: number;
+      riskAdjustedContribution: number;
+      depositBalance: number;
+      loanBalance: number;
+      annualTransactions: number;
+      currentDiscountPercent: number;
+      acceptableFeeThresholdBps?: number;
+      creditRating?: string;
+      pricingPackage?: string;
+   };
+   discountPercent: number;
+   rebateType?: 'NONE' | 'VOLUME' | 'RELATIONSHIP' | 'PRODUCT_BUNDLE';
+   rebateThreshold?: number;
   baseRevenue: number;
   adjustedRevenue: number;
   discountAmount: number;
   effectiveDiscountPercent: number;
   estimatedMarginPercent: number;
+   riskAdjustedContributionImpact: number;
+   pricingThresholdStatus: 'WITHIN_RANGE' | 'OUTSIDE_RANGE' | 'REQUIRES_JUSTIFICATION';
+   complianceWarnings: string[];
+   selectedScenario?: 'BASELINE' | 'RELATIONSHIP_INVESTMENT' | 'AGGRESSIVE_RETENTION';
   status: 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
   createdBy: string;
   createdAt: string;
 }
 ```
+
+Customer 360 上下文必须以 snapshot 形式写入 `SimulationResult`，确保审批人员看到的是提交当时使用的客户画像，而不是随着 Customer 360 后续更新而漂移的结果。
 
 Mock API：
 
@@ -273,7 +422,10 @@ POST   /api/pricing/simulations/draft
 POST   /api/pricing/simulations/:id/submit
 GET    /api/pricing/simulations
 GET    /api/pricing/simulations/:id
+GET    /api/customer/:customerId/360/pricing-context
 ```
+
+`GET /api/customer/:customerId/360/pricing-context` 为 Mock 只读接口，返回 Pricing Simulation 所需的最小 Customer 360 定价上下文；不返回完整客户 360 页面数据。
 
 ---
 
@@ -308,6 +460,17 @@ Date Range
 Keyword
 ```
 
+增加 Customer 360 相关查询：
+
+```text
+Customer Segment
+Customer Value
+Risk Level
+Product
+Relationship Manager
+Pricing Exception / Threshold Breach
+```
+
 ### 运行模拟
 
 Run Simulation → 前端 Mock 计算 → 展示结果与对比场景。
@@ -324,6 +487,15 @@ Submit for Approval → 状态改为 SUBMITTED，并可联动审批页。
 
 Load 历史记录 → 回填参数并允许再次运行。
 
+加载历史记录时同时恢复当时的 Customer 360 snapshot metadata（客户 ID、画像版本/快照时间、客户价值、风险等级、历史定价参考线）。如果当前客户画像已经变化，页面显示 `Customer 360 context has changed`，用户需要确认后才能重新运行或提交审批。
+
+### Customer 360 联动验收
+
+* 从 Customer 360 的 `Value & Pricing` 打开 Pricing Simulation 时，自动带入 `customerId` 并加载客户上下文。
+* 切换客户后，默认产品、市场、交易量、历史折扣参考线和风险提示同步刷新。
+* 提交审批时保存 Customer 360 snapshot、场景选择、阈值检查和合规警告。
+* Customer 360 中的客户状态、合规限制或风险等级变化时，旧模拟仍可查看，但重新运行和提交审批必须重新确认上下文。
+
 ---
 
 ## 十四、Demo 重点
@@ -337,12 +509,16 @@ UI 上建议突出：
 ```text
 Scenario Modeling
         ↓
+Customer 360 Context
+   ↓
 Revenue Impact Visibility
         ↓
 Approval-ready Proposal
         ↓
 Controlled Pricing Execution
 ```
+
+Demo 讲解应突出：同一个折扣对不同客户并不代表同一个决策。客户价值、关系规模、产品渗透率、风险调整贡献、历史议价和合规状态共同决定方案的可解释性与审批优先级。
 
 ---
 
