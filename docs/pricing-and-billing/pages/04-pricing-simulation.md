@@ -182,6 +182,27 @@ Customer Value / Pricing Threshold Check
 Approval Recommendation
 ```
 
+### 6. 监管/机构基准数据与复核周期（Mock 展示，非真实计算）
+
+部分市场的定价参数会参考国家或行业机构发布的基准利率/费率（例如新加坡 SORA、香港 HONIA、内地 LPR、日本 TONA、澳大利亚 AONIA）。这些机构按各自节奏（月度 / 季度 / 半年 / 年度）发布更新，Demo 中据此体现“定价应定期复核”的业务概念，但**不接入真实数据源，也不做后台自动重算**。
+
+按市场维护一份只读的 Mock 基准信息，包含：
+
+```text
+Publisher（发布机构，如 MAS / HKMA / PBOC / BOJ / RBA）
+Benchmark Name（基准名称，如 SORA Reference Rate）
+Effective Date（当前基准生效日）
+Review Cycle（复核周期：MONTHLY / QUARTERLY / SEMI_ANNUAL / ANNUAL）
+Next Review Date（下次复核日期，仅展示，不触发任何调度）
+```
+
+页面行为：
+
+* Customer 360 Context 摘要区新增一行 `Benchmark Reference`，展示当前市场引用的发布机构、基准名称与下次复核日期。
+* Results 区的 Descriptions 中新增 `Benchmark Reference` 项，随选中市场联动展示。
+* Simulation History 列表新增 `Review Cycle` 列（Tag 展示周期），当 `Next Review Date` 早于当前日期时，额外显示一个提示 Tag（如 `Review Due`）。点击可复用现有 `Load` 行为回填参数，由用户手动点击 `Run Simulation` 重新出结果——不做任何自动触发的重算。
+* Detail Drawer 的 Customer 360 Snapshot 卡片同步展示引用的基准数据快照。
+
 ---
 
 ## 五、Mock 数据
@@ -219,10 +240,11 @@ Simulation History 列表至少包含：
 7. Adjusted Revenue
 8. Effective Discount
 9. Estimated Margin
-10. Status
-11. Created By
-12. Created At
-13. Actions
+10. Review Cycle（参见四-A.6，展示基准复核周期与到期提示）
+11. Status
+12. Created By
+13. Created At
+14. Actions
 
 Actions：
 
@@ -292,6 +314,7 @@ Discount Amount
 Estimated Margin
 Product Breakdown
 Customer 360 Context Snapshot
+Benchmark Reference（发布机构 / 基准名称 / 下次复核日期，参见四-A.6）
 Risk-adjusted Contribution Impact
 Pricing Threshold Check
 Approval Recommendation
@@ -393,6 +416,14 @@ interface SimulationResult {
       acceptableFeeThresholdBps?: number;
       creditRating?: string;
       pricingPackage?: string;
+   };
+   // Mock 展示用：市场对应的机构基准利率与复核周期，不驱动任何真实计算或调度
+   benchmarkSource: {
+      publisher: string; // e.g. 'MAS' | 'HKMA' | 'PBOC' | 'BOJ' | 'RBA'
+      benchmarkName: string; // e.g. 'SORA Reference Rate'
+      effectiveDate: string;
+      reviewCycle: 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+      nextReviewDate: string;
    };
    discountPercent: number;
    rebateType?: 'NONE' | 'VOLUME' | 'RELATIONSHIP' | 'PRODUCT_BUNDLE';

@@ -1017,7 +1017,7 @@ const Customer360Page: React.FC = () => {
           title={t('pages.customer.charge.title')}
           onCancel={() => setDetailModal(null)}
           footer={null}
-          width="min(1200px, calc(100vw - 48px))"
+          width="min(1400px, calc(100vw - 48px))"
         >
           <ProTable
             rowKey="id"

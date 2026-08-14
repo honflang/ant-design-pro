@@ -50,6 +50,17 @@ type ScenarioKey =
   | 'RELATIONSHIP_INVESTMENT'
   | 'AGGRESSIVE_RETENTION';
 
+type ReviewCycle = 'MONTHLY' | 'QUARTERLY' | 'SEMI_ANNUAL' | 'ANNUAL';
+
+// Mock display only: illustrates that pricing references a published market benchmark; not a real data feed or scheduler.
+type BenchmarkSource = {
+  publisher: string;
+  benchmarkName: string;
+  effectiveDate: string;
+  reviewCycle: ReviewCycle;
+  nextReviewDate: string;
+};
+
 type SimulationFormValues = {
   customerId: string;
   market: string;
@@ -102,6 +113,7 @@ type SimulationRecord = {
     creditRating: string;
     pricingPackage: string;
   };
+  benchmarkSource: BenchmarkSource;
   status: SimulationStatus;
   createdBy: string;
   createdAt: string;
@@ -126,6 +138,44 @@ const marketCurrencyMap: Record<string, string> = {
   China: 'CNY',
   Japan: 'JPY',
   Australia: 'AUD',
+};
+
+const marketBenchmarkMap: Record<string, BenchmarkSource> = {
+  Singapore: {
+    publisher: 'MAS',
+    benchmarkName: 'SORA Reference Rate',
+    effectiveDate: '2026-07-01',
+    reviewCycle: 'QUARTERLY',
+    nextReviewDate: '2026-10-01',
+  },
+  'Hong Kong': {
+    publisher: 'HKMA',
+    benchmarkName: 'HONIA Reference Rate',
+    effectiveDate: '2026-06-01',
+    reviewCycle: 'MONTHLY',
+    nextReviewDate: '2026-09-01',
+  },
+  China: {
+    publisher: 'PBOC',
+    benchmarkName: 'LPR (Loan Prime Rate)',
+    effectiveDate: '2026-08-01',
+    reviewCycle: 'MONTHLY',
+    nextReviewDate: '2026-09-20',
+  },
+  Japan: {
+    publisher: 'BOJ',
+    benchmarkName: 'TONA Reference Rate',
+    effectiveDate: '2026-04-01',
+    reviewCycle: 'SEMI_ANNUAL',
+    nextReviewDate: '2026-10-01',
+  },
+  Australia: {
+    publisher: 'RBA',
+    benchmarkName: 'AONIA Cash Rate',
+    effectiveDate: '2026-01-01',
+    reviewCycle: 'ANNUAL',
+    nextReviewDate: '2027-01-01',
+  },
 };
 
 const statusColors: Record<SimulationStatus, string> = {
@@ -156,6 +206,9 @@ const formatCompactAmount = (currency: string, amount: number) =>
 
 const riskColor = (risk: RiskLevel) =>
   risk === 'LOW' ? 'success' : risk === 'MEDIUM' ? 'warning' : 'error';
+
+const isReviewDue = (nextReviewDate: string) =>
+  new Date(nextReviewDate).getTime() <= Date.now();
 
 const getProductsForCustomer = (customer: Customer360) =>
   customer.products.map((product) => product.name);
@@ -264,6 +317,7 @@ const createSimulation = (
       creditRating: customer.risk.creditRating,
       pricingPackage: customer.pricing.pricingPackage,
     },
+    benchmarkSource: marketBenchmarkMap[values.market] ?? marketBenchmarkMap.Singapore,
     status,
     createdBy: 'Current User',
     createdAt: new Date().toISOString().slice(0, 10),
@@ -478,6 +532,26 @@ const SimulationPage: React.FC = () => {
       title: t('pages.pricing.simulation.col.margin', 'Margin'),
       dataIndex: 'estimatedMarginPercent',
       render: (value) => `${Number(value).toFixed(1)}%`,
+      search: false,
+    },
+    {
+      title: t('pages.pricing.simulation.col.reviewCycle', 'Review Cycle'),
+      dataIndex: ['benchmarkSource', 'reviewCycle'],
+      render: (_, row) => (
+        <Space size={4}>
+          <Tag>
+            {t(
+              `pages.pricing.simulation.reviewCycle.${row.benchmarkSource.reviewCycle}`,
+              row.benchmarkSource.reviewCycle,
+            )}
+          </Tag>
+          {isReviewDue(row.benchmarkSource.nextReviewDate) && (
+            <Tag color="warning">
+              {t('pages.pricing.simulation.reviewCycle.due', 'Review Due')}
+            </Tag>
+          )}
+        </Space>
+      ),
       search: false,
     },
     {
@@ -739,6 +813,18 @@ const SimulationPage: React.FC = () => {
             discount · {customer.pricing.acceptableFeeThreshold} · Snapshot:
             {t('pages.pricing.simulation.context.snapshot', 'Snapshot')}: 2026-08-12
           </Col>
+          <Col span={24}>
+            <Text type="secondary">{t('pages.pricing.simulation.context.benchmarkReference', 'Benchmark Reference')}: </Text>
+            {(() => {
+              const benchmark =
+                marketBenchmarkMap[customer.operatingMarkets[0]] ??
+                marketBenchmarkMap.Singapore;
+              return `${benchmark.publisher} · ${benchmark.benchmarkName} · ${t(
+                `pages.pricing.simulation.reviewCycle.${benchmark.reviewCycle}`,
+                benchmark.reviewCycle,
+              )} · ${t('pages.pricing.simulation.context.nextReview', 'Next Review')}: ${benchmark.nextReviewDate}`;
+            })()}
+          </Col>
         </Row>
       </ProCard>
 
@@ -913,6 +999,10 @@ const SimulationPage: React.FC = () => {
                   <Descriptions.Item label={t('pages.pricing.simulation.result.contextSnapshot', 'Context Snapshot')}>
                     {result.record.customer360Snapshot.capturedAt.slice(0, 10)}
                   </Descriptions.Item>
+                  <Descriptions.Item label={t('pages.pricing.simulation.context.benchmarkReference', 'Benchmark Reference')}>
+                    {result.record.benchmarkSource.publisher} · {result.record.benchmarkSource.benchmarkName} ·{' '}
+                    {t('pages.pricing.simulation.context.nextReview', 'Next Review')}: {result.record.benchmarkSource.nextReviewDate}
+                  </Descriptions.Item>
                 </Descriptions>
                 <Text strong>{t('pages.pricing.simulation.result.scenario', 'Scenario Comparison')}</Text>
                 <Row gutter={[12, 12]} style={{ marginTop: 8 }}>
@@ -1011,6 +1101,14 @@ const SimulationPage: React.FC = () => {
                     marketCurrencyMap[detail.market] ?? 'USD',
                     detail.customer360Snapshot.loanBalance,
                   )}
+                </Descriptions.Item>
+                <Descriptions.Item label={t('pages.pricing.simulation.context.benchmarkReference', 'Benchmark Reference')}>
+                  {detail.benchmarkSource.publisher} · {detail.benchmarkSource.benchmarkName} ·{' '}
+                  {t(
+                    `pages.pricing.simulation.reviewCycle.${detail.benchmarkSource.reviewCycle}`,
+                    detail.benchmarkSource.reviewCycle,
+                  )}{' '}
+                  · {t('pages.pricing.simulation.context.nextReview', 'Next Review')}: {detail.benchmarkSource.nextReviewDate}
                 </Descriptions.Item>
               </Descriptions>
             </ProCard>
