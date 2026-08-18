@@ -80,6 +80,34 @@ export interface BankingRelationship {
   contributionCurrency: string;
 }
 
+export type BillingStatementStatus = 'Issued' | 'Paid' | 'Overdue';
+
+export interface BillingStatementDetail {
+  category: string;
+  items: { name: string; amount: number }[];
+}
+
+export interface BillingStatement {
+  id: string;
+  billDate: string;
+  paymentDueDate: string;
+  servicePeriodStart: string;
+  servicePeriodEnd: string;
+  totalAmountDue: number;
+  currency: string;
+  cashManagementFee: number;
+  tradeFinanceFee: number;
+  globalMarketsTransactionFee: number;
+  otherFees?: number;
+  remarks: string;
+  status: BillingStatementStatus;
+  details: BillingStatementDetail[];
+}
+
+export interface BillingProfile {
+  statements: BillingStatement[];
+}
+
 export interface CustomerValue {
   relationshipHealth: number;
   revenueGrowth: string;
@@ -195,6 +223,7 @@ export interface Customer360 {
   contacts: CustomerContact[];
   compliance: ComplianceProfile;
   banking: BankingRelationship;
+  billing: BillingProfile;
   value: CustomerValue;
   pricing: PricingProfile;
   risk: RiskProfile;

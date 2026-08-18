@@ -1,4 +1,4 @@
-import type { Customer360 } from './data.d';
+import type { BillingProfile, Customer360 } from './data.d';
 
 const formatM = (value: number, currency: string) =>
   `${currency} ${(value / 1_000_000).toFixed(value % 1_000_000 === 0 ? 0 : 2)}M`;
@@ -55,6 +55,45 @@ const makeDepositLoanTrend = (
       loan: Math.round(baseLoan * variation),
     };
   });
+
+const makeBilling = (customerId: string, currency: string): BillingProfile => {
+  const months = [
+    ['2026-08-01', '2026-08-15', '2026-07-01', '2026-07-31', 420_000, 120_000, 180_000, 120_000, 'Issued'],
+    ['2026-07-01', '2026-07-15', '2026-06-01', '2026-06-30', 390_000, 110_000, 170_000, 110_000, 'Paid'],
+    ['2026-06-01', '2026-06-15', '2026-05-01', '2026-05-31', 385_000, 105_000, 175_000, 105_000, 'Paid'],
+    ['2026-05-01', '2026-05-15', '2026-04-01', '2026-04-30', 372_000, 102_000, 165_000, 105_000, 'Paid'],
+    ['2026-04-01', '2026-04-15', '2026-03-01', '2026-03-31', 365_000, 98_000, 160_000, 107_000, 'Paid'],
+    ['2026-03-01', '2026-03-15', '2026-02-01', '2026-02-28', 358_000, 95_000, 158_000, 105_000, 'Paid'],
+    ['2026-02-01', '2026-02-15', '2026-01-01', '2026-01-31', 350_000, 92_000, 155_000, 103_000, 'Paid'],
+    ['2026-01-01', '2026-01-15', '2025-12-01', '2025-12-31', 342_000, 90_000, 150_000, 102_000, 'Paid'],
+    ['2025-12-01', '2025-12-15', '2025-11-01', '2025-11-30', 338_000, 88_000, 148_000, 102_000, 'Paid'],
+    ['2025-11-01', '2025-11-15', '2025-10-01', '2025-10-31', 330_000, 85_000, 145_000, 100_000, 'Paid'],
+    ['2025-10-01', '2025-10-15', '2025-09-01', '2025-09-30', 325_000, 82_000, 143_000, 100_000, 'Paid'],
+    ['2025-09-01', '2025-09-15', '2025-08-01', '2025-08-31', 318_000, 80_000, 140_000, 98_000, 'Paid'],
+  ] as const;
+
+  return {
+    statements: months.map(([billDate, paymentDueDate, servicePeriodStart, servicePeriodEnd, totalAmountDue, cashManagementFee, tradeFinanceFee, globalMarketsTransactionFee, status], index) => ({
+      id: `INV-${customerId}-${index + 1}`,
+      billDate,
+      paymentDueDate,
+      servicePeriodStart,
+      servicePeriodEnd,
+      totalAmountDue,
+      currency,
+      cashManagementFee,
+      tradeFinanceFee,
+      globalMarketsTransactionFee,
+      remarks: 'Monthly service fee',
+      status,
+      details: [
+        { category: 'Cash Management Fee', items: [{ name: 'Account Maintenance', amount: Math.round(cashManagementFee * 0.375) }, { name: 'Wire Transfer (outbound)', amount: Math.round(cashManagementFee * 0.317) }, { name: 'Collection Services', amount: cashManagementFee - Math.round(cashManagementFee * 0.375) - Math.round(cashManagementFee * 0.317) }] },
+        { category: 'Trade Finance Fee', items: [{ name: 'Letter of Credit', amount: Math.round(tradeFinanceFee * 0.667) }, { name: 'Trade Loan', amount: tradeFinanceFee - Math.round(tradeFinanceFee * 0.667) }] },
+        { category: 'Global Markets Transaction Fee', items: [{ name: 'FX Spot', amount: Math.round(globalMarketsTransactionFee * 0.708) }, { name: 'FX Forward', amount: globalMarketsTransactionFee - Math.round(globalMarketsTransactionFee * 0.708) }] },
+      ],
+    })),
+  };
+};
 
 const makeCustomer = (partial: Partial<Customer360> & { id: string; customerName: string }): Customer360 => {
   const currency = partial.totalRevenueCurrency ?? '$';
@@ -167,6 +206,8 @@ const makeCustomer = (partial: Partial<Customer360> & { id: string; customerName
       contributionCurrency,
       ...partial.banking,
     },
+
+    billing: makeBilling(partial.id, currency),
 
     value: {
       relationshipHealth: 92,

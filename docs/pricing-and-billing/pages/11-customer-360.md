@@ -66,8 +66,19 @@ Agent 开始执行前必须：
 10. 不升级依赖。
 11. 不引入新的 UI Framework。
 12. 不修改无关页面。
+13. **必须支持中英文国际化（i18n）**，禁止在页面中硬编码中文或英文文案。
 
 如果项目已有类似 Customer / Client / Account 页面，应优先复用其组件和数据模式。
+
+## 1.1 Internationalization (i18n)
+
+本页面（含 Customer 360 Detail Modal、Banking Relationship 全屏账单视图、账单详情弹窗、发票预览）必须与项目现有 i18n 机制保持一致：
+
+* 所有展示文案（标题、表格列名、按钮、筛选项、状态 / 枚举标签、空值占位符）必须使用 `useIntl().formatMessage` 或 `<FormattedMessage />`，禁止硬编码字符串。
+* 文案 key 统一放在 `src/locales/*/pages.ts`，命名沿用已有前缀 `pages.customer.360.*`（如 `pages.customer.360.billingModal.*`、`pages.customer.360.enum.*`）。
+* **至少同时维护 `zh-CN` 和 `en-US` 两个语言包**，新增字段（如账单明细表格的“收费服务 / 费用类型 / 日期 / 资费项目 / 定价模型 / 计费基础 / 单价 / 数量 / 毛额 / 净额 / 备注”，以及 `Flat` / `Rate` / `Tiered` 定价模型枚举）必须在两个语言包中都补齐，不能只依赖代码里的英文兜底文案。
+* Mock 数据本身（客户名称、备注等自由文本）可以保持单一语言，不强制翻译，但所有 UI 标签、按钮和状态文案必须国际化。
+* 切换语言（zh-CN ↔ en-US）后，Customer 360 Modal、全屏账单视图、账单详情弹窗、发票预览标题必须正确显示对应语言，不出现遗漏 key 报错或英文/中文混排。
 
 ---
 
@@ -90,6 +101,8 @@ Customer Management
 
 # 3. Page Layout
 
+Customer 360 主页面以客户搜索和客户列表为主。客户详情不在主页面纵向展开，用户选择客户后通过弹窗查看完整 Customer 360 画像。
+
 页面整体结构：
 
 ```text
@@ -97,19 +110,29 @@ Customer 360
 │
 ├── Customer Search
 │
-├── Customer Header
-│
-├── KPI Summary
-│
-└── Tabs
+└── Customer Result Table
+  │
+  └── Customer 360 Detail Modal
     │
-    ├── Overview
-    ├── Identity & Compliance
-    ├── Banking Relationship
-    ├── Value & Pricing
-    ├── Interaction
-    └── Relationship Graph
+    ├── Customer Header
+    ├── KPI Summary
+    └── Tabs
+      │
+      ├── Overview
+      ├── Banking Relationship
+      ├── Value & Pricing
+      ├── Interaction
+      └── Relationship Graph
 ```
+
+### Customer 360 Detail Modal
+
+* 使用 Ant Design `Modal` 或项目已有的 Modal 封装，不新增 UI Framework。
+* Modal 内展示当前客户的完整 Customer Header、KPI Summary 和六个业务 Tab。
+* Modal 支持关闭、重新选择客户和响应式宽度；关闭后保留客户搜索列表状态。
+* `Group View` 只切换 Modal 内的 `Relationship Graph` Tab，不跳转新页面。
+* Modal 内的 `Pricing` 和 Header `Billing` 操作继续按当前客户 ID 跨模块跳转。
+* Banking Relationship 内的 `View Billing` 在 Customer 360 Modal 内打开全屏账单视图；账单详情可以继续打开二级 Drawer。
 
 使用：
 
@@ -163,11 +186,13 @@ Japan
 Large Corporate
 ```
 
-选择客户后刷新整个 Customer 360 页面。
+选择客户后打开 Customer 360 Detail Modal，并刷新 Modal 内的 Header、KPI、Tabs 和所有 Mock 数据。关闭详情弹窗后返回客户搜索列表。
 
 ---
 
 # 5. Customer Header
+
+Customer Header 位于 Customer 360 Detail Modal 顶部，不在主搜索页面单独展示。
 
 显示：
 
@@ -215,6 +240,7 @@ Header 操作：
 [Pricing]
 [Billing]
 [Group View]
+[Charge Details]
 ```
 
 其中：
@@ -246,6 +272,32 @@ Billing Management
 ```text
 Relationship Graph
 ```
+
+### Charge Details
+
+位于 Header 操作区最右侧（Customer 360 Detail Modal 右上角）。
+
+点击后打开一个独立弹窗（Modal），展示当前客户的收费服务事件流水，不跳转页面、不影响 Modal 当前所在 Tab。
+
+弹窗内只展示一个列表（ProTable，不分页，按需支持横向滚动），Modal 宽度使用较宽尺寸（如 `width={1100}`）以容纳全部列。
+
+表格字段：
+
+| 事件类型 | 事件时间 | 服务编码 | 资费项 | 资金池组数 | 活跃账户数 | 变更账户数 |
+| -------- | -------- | -------- | ------ | ---------- | ---------- | ---------- |
+
+其中 **资费项** 展示资费项名称（加粗）及资费项编号；资金池组数 / 活跃账户数 / 变更账户数如无对应数据显示为 `-`。
+
+Mock 示例：
+
+```text
+CASH_POOL_CREATE           2026-01-15T09:30:00+08:00    FCY_DOMESTIC_CASH_POOL    Setup Fee TARIFF-001                 3    4    -
+CASH_POOL_MONTHLY_MAINT    2026-07-01T02:00:00+08:00    FCY_DOMESTIC_CASH_POOL    Monthly Maintenance Fee TARIFF-002   3    4    -
+CASH_POOL_COMMISSION       2026-07-01T02:00:00+08:00    FCY_DOMESTIC_CASH_POOL    Commission Fee TARIFF-003            3    4    -
+CASH_POOL_AMEND            2026-06-10T14:20:00+08:00    FCY_DOMESTIC_CASH_POOL    Amendment Fee TARIFF-004             -    -    2
+```
+
+列名同样需要通过 i18n key 展示，随语言切换正确显示中英文，不得硬编码。
 
 ---
 
@@ -696,7 +748,7 @@ $2.31M
 
 在 Contribution 区域提供 **View Billing** 入口。
 
-用户点击后，打开账单明细 Drawer / Modal，展示当前客户的账单列表。
+用户点击后，在 Customer 360 Modal 内切换到全屏账单视图，展示当前客户的账单列表。全屏账单视图覆盖 Customer 360 Modal 的主要内容区域，保留当前客户上下文，并提供明确的返回入口；返回后恢复之前的 Customer 360 Tab 和滚动位置。
 
 ### 9.5.1 筛选
 
@@ -731,53 +783,37 @@ Mock 示例（ABC Global Holdings）：
 操作列：
 
 ```text
-[Bill Details]    [Download Invoice]
+[Bill Details]    [开票]
 ```
 
 ### 9.5.3 账单详情
 
-点击 **Bill Details** 打开二级 Drawer / Modal，展示单笔账单的明细。
+点击 **Bill Details** 在全屏账单视图上打开二级 Modal，展示单笔账单的收费明细；关闭详情后返回全屏账单列表。
 
-显示字段：
+Modal 内不再展示 Bill Date / Status 等账单级字段，只展示一个收费明细列表（ProTable，不分页，按需支持横向滚动），Modal 宽度使用较宽尺寸（如 `width={1200}`）以容纳全部列。
 
-```text
-Bill Date
-Payment Due Date
-Service Period Start
-Service Period End
-Billing Currency
-Total Amount Due
-Cash Management Fee
-Trade Finance Fee
-Global Markets Transaction Fee
-Other Fees
-Remarks
-Status
-  - Issued
-  - Paid
-  - Overdue
-```
+表格字段：
 
-明细行项目示例：
+| 收费服务 | 费用类型 | 日期 | 资费项目 | 定价模型 | 计费基础 | 单价 | 数量 | 毛额 | 净额 | 备注 |
+| -------- | -------- | ---- | -------- | -------- | -------- | ---- | ---- | ---- | ---- | ---- |
+
+其中 **净额** 列加粗展示。
+
+以上列名及 `Flat` / `Rate` / `Tiered` 定价模型枚举均需通过 i18n key 展示（`pages.customer.360.billingModal.*` / `pages.customer.360.enum.*`），随语言切换正确显示中英文，不得硬编码。
+
+Mock 示例：
 
 ```text
-Cash Management Fee
-  Account Maintenance        $45,000
-  Wire Transfer (outbound)   $38,000
-  Collection Services        $37,000
-
-Trade Finance Fee
-  Letter of Credit           $120,000
-  Trade Loan                 $60,000
-
-Global Markets Transaction Fee
-  FX Spot                    $85,000
-  FX Forward                 $35,000
+FCY_DOMESTIC_CASH_POOL    Setup Fee                 2026-01-15    Setup Fee                 Flat    Group      $5,000.00    3        $2,000.00    $2,000.00    Initial setup
+FCY_DOMESTIC_CASH_POOL    Monthly Maintenance Fee   2026-07-01    Monthly Maintenance Fee   Flat    Account    $500.00      1        $500.00      $500.00      -
+FCY_DOMESTIC_CASH_POOL    Amendment Fee             2026-06-10    Amendment Fee             Flat    Account    $1,000.00    1        $1,000.00    $1,000.00    -
+FCY_DOMESTIC_CASH_POOL    Commission Fee            2026-07-01    Commission Fee            Rate    Account    0.3%         20000    $600.00      $600.00      -
+FCY_DOMESTIC_CASH_POOL    Commission Fee            2026-07-01    Commission Fee            Rate    Account    0.3%         30000    $900.00      $900.00      -
 ```
 
-### 9.5.4 发票下载
+### 9.5.4 发票预览
 
-点击 **Download Invoice** 触发 Mock 下载。
+点击 **开票** 在全屏账单视图内打开当前账单的 Mock PDF 预览，不触发浏览器文件下载。
 
 根据客户 **Registration Country / Operating Markets** 提供不同的固定发票模板：
 
@@ -799,7 +835,9 @@ Global Markets Transaction Fee
 
 发票内容为静态模板 + 当前账单数据填充，不连接真实税务或发票系统。
 
-所有文件以 PDF / CSV Mock 下载即可，无需真实文件生成服务。
+预览必须生成一个可打开的单页 PDF Mock 发票，并包含发票抬头、客户信息、账单日期、服务周期、费用分项、应付总额、状态和 Demo 水印。PDF 只需使用浏览器端或项目已有能力生成，不需要真实 PDF 服务。
+
+PDF 需要具备接近正式发票的版式结构，但明确标注为 Mock 文件，不得声称具备真实税务效力。文件下载不是本需求的一部分。
 
 ---
 
@@ -1226,11 +1264,17 @@ interface BillingStatement {
 }
 
 interface BillingStatementDetail {
-  category: string;
-  items: {
-    name: string;
-    amount: number;
-  }[];
+  chargeService: string;
+  feeType: string;
+  date: string;
+  tariffItem: string;
+  pricingModel: string;
+  chargeBasis: string;
+  unitPrice: string;
+  quantity: number;
+  grossAmount: number;
+  netAmount: number;
+  remarks?: string;
 }
 
 interface CustomerValue {}
@@ -1408,18 +1452,19 @@ Banking Relationship
     ↓
 View Billing
     ↓
-Billing Statement Drawer
+    Full-screen Billing Statement View
 ```
 
-本入口不跳转页面，直接在 Customer 360 页面内打开账单明细。
+  本入口不跳转新的业务页面，直接在 Customer 360 Modal 内打开全屏账单视图。账单列表应提供返回 Customer 360 的入口；关闭账单视图后恢复原来的客户、Tab 和页面状态。
 
 支持：
 
 ```text
 Month filter
 Bill list (sorted by bill date desc)
-Bill details
-Invoice download (region-specific template)
+  Full-screen bill list view
+  Bill details drawer / modal
+Invoice PDF preview (region-specific template)
 ```
 
 ---
@@ -1525,12 +1570,14 @@ External Intelligence
 
 ### 页面
 
-* [ ] `/customer/360` 可以访问
+* [ ] `/pricing-billing/customer/360` 可以访问
 * [ ] 菜单正确显示
-* [ ] 默认 Customer 正确加载
-* [ ] Customer Search 可切换客户
-* [ ] Header 正确显示
-* [ ] KPI 正确显示
+* [ ] 默认客户列表正确加载
+* [ ] Customer Search 可切换客户并打开详情弹窗
+* [ ] Customer 360 Detail Modal 可关闭并返回客户列表
+* [ ] Modal 内 Header 正确显示
+* [ ] Modal 内 KPI 正确显示
+* [ ] Header 右上角 `Charge Details` 按钮可打开收费明细弹窗，展示事件类型/事件时间/服务编码/资费项/资金池组数/活跃账户数/变更账户数列表
 
 ### Overview
 
@@ -1560,9 +1607,10 @@ External Intelligence
 * [ ] Contribution
 * [ ] Billing Statement
   * [ ] Month filter
-  * [ ] Bill list sorted by bill date desc
+  * [ ] Full-screen bill list sorted by bill date desc
+  * [ ] Return to Customer 360 while preserving customer and tab state
   * [ ] Bill details drawer
-  * [ ] Invoice download with region-specific template
+  * [ ] Invoice PDF preview with region-specific template
 
 ### Pricing
 
@@ -1593,3 +1641,4 @@ External Intelligence
 * [ ] 不修改无关模块
 * [ ] 不新增不必要依赖
 * [ ] 遵循现有 Ant Design Pro 项目结构
+* [ ] 页面全部文案（含账单列表、账单详情、发票预览）已使用 i18n key，`zh-CN` 与 `en-US` 语言包均已补齐，无硬编码文案

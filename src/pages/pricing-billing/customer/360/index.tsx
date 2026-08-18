@@ -1,10 +1,11 @@
 import {
+  ArrowLeftOutlined,
   BankOutlined,
   DollarCircleOutlined,
   EyeOutlined,
   FileTextOutlined,
   TeamOutlined,
-  ThunderboltOutlined,
+  UnorderedListOutlined,
 } from '@ant-design/icons';
 import type { ProColumns } from '@ant-design/pro-components';
 import {
@@ -20,6 +21,7 @@ import {
   Button,
   Card,
   Col,
+  DatePicker,
   Modal,
   Progress,
   Row,
@@ -31,15 +33,14 @@ import {
   Tree,
   Typography,
 } from 'antd';
+import type { Dayjs } from 'dayjs';
 import { Line } from '@ant-design/plots';
 import React, { useEffect, useMemo, useState } from 'react';
-import type { Customer360, CustomerInteraction } from './data.d';
-import {
-  type BillDetailRecord,
-  getBillDetails,
-  type ChargeRecord,
-  getChargeRecords,
-} from './detailMock';
+import type { BillDetailRecord } from './detailMock';
+import { getBillDetails } from './detailMock';
+import type { ChargeRecord } from './detailMock';
+import { getChargeRecords } from './detailMock';
+import type { BillingStatement, Customer360, CustomerInteraction } from './data.d';
 import { customers, findCustomerById } from './mock';
 
 const { Text, Title } = Typography;
@@ -56,12 +57,114 @@ const money = (value: number, currency: string) => {
   return `${currency} ${(value / divisor).toFixed(value % divisor === 0 ? 0 : 2)}${suffix}`;
 };
 
+const formatAmount = (value: number, currency: string) =>
+  `${currency} ${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
 const compact = (value: number) =>
   value >= 1_000_000
     ? `${(value / 1_000_000).toFixed(2)}M`
     : value >= 1_000
       ? `${(value / 1_000).toFixed(0)}K`
       : String(value);
+
+const pdfText = (value: string | number) =>
+  String(value)
+    .replace(/[\\()]/g, '\\$&')
+    .replace(/[^\x20-\x7e]/g, '?');
+
+const createMockInvoicePdf = (
+  customer: Customer360,
+  statement: BillingStatement,
+  template: string,
+) => {
+  const commands: string[] = [];
+  const text = (x: number, y: number, value: string | number, size = 10) => {
+    commands.push(`BT /F1 ${size} Tf ${x} ${y} Td (${pdfText(value)}) Tj ET`);
+  };
+  const line = (x1: number, y1: number, x2: number, y2: number) => {
+    commands.push(`${x1} ${y1} m ${x2} ${y2} l S`);
+  };
+  const amount = (value: number) =>
+    `${statement.currency} ${value.toLocaleString('en-US')}`;
+
+  commands.push('0.16 0.25 0.38 rg 0.16 0.25 0.38 RG');
+  text(48, 742, `${template} TAX INVOICE`, 20);
+  text(48, 720, 'MOCK DOCUMENT - FOR DEMONSTRATION ONLY', 9);
+  text(420, 742, 'Invoice No.', 9);
+  text(500, 742, statement.id, 9);
+  line(48, 708, 564, 708);
+
+  text(48, 684, 'BILL TO', 9);
+  text(48, 666, customer.customerName, 12);
+  text(48, 648, `Customer ID: ${customer.id}`, 9);
+  text(48, 632, `Registration Country: ${customer.identity.registrationCountry}`, 9);
+  text(330, 684, 'INVOICE DETAILS', 9);
+  text(330, 666, `Bill Date: ${statement.billDate}`, 9);
+  text(330, 650, `Payment Due: ${statement.paymentDueDate}`, 9);
+  text(330, 634, `Service Period: ${statement.servicePeriodStart} - ${statement.servicePeriodEnd}`, 9);
+  text(330, 618, `Currency: ${statement.currency}`, 9);
+
+  line(48, 594, 564, 594);
+  text(48, 576, 'DESCRIPTION', 9);
+  text(450, 576, 'AMOUNT', 9);
+  line(48, 566, 564, 566);
+
+  let y = 544;
+  const feeRows = [
+    ['Cash Management Fee', statement.cashManagementFee],
+    ['Trade Finance Fee', statement.tradeFinanceFee],
+    ['Global Markets Transaction Fee', statement.globalMarketsTransactionFee],
+    ['Other Fees', statement.otherFees ?? 0],
+  ];
+  feeRows.forEach(([label, value]) => {
+    text(48, y, label, 10);
+    text(450, y, amount(Number(value)), 10);
+    y -= 20;
+  });
+  line(48, y + 8, 564, y + 8);
+  text(48, y - 12, 'TOTAL AMOUNT DUE', 11);
+  text(450, y - 12, amount(statement.totalAmountDue), 11);
+  y -= 48;
+
+  text(48, y, 'DETAILS', 9);
+  y -= 18;
+  statement.details.forEach((detail) => {
+    text(48, y, detail.category, 9);
+    y -= 16;
+    detail.items.forEach((item) => {
+      text(64, y, item.name, 9);
+      text(450, y, amount(item.amount), 9);
+      y -= 15;
+    });
+  });
+  line(48, 92, 564, 92);
+  text(48, 74, `Remarks: ${statement.remarks}`, 9);
+  text(450, 74, `Status: ${statement.status}`, 9);
+  text(48, 48, 'Static mock invoice. Not a tax invoice and not connected to a billing or tax system.', 8);
+
+  const stream = commands.join('\n');
+  const objects = [
+    '<< /Type /Catalog /Pages 2 0 R >>',
+    '<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+    '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>',
+    '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>',
+    `<< /Length ${new TextEncoder().encode(stream).length} >>\nstream\n${stream}\nendstream`,
+  ];
+  const header = '%PDF-1.4\n';
+  let pdf = header;
+  const offsets = [0];
+  objects.forEach((object, index) => {
+    offsets.push(new TextEncoder().encode(pdf).length);
+    pdf += `${index + 1} 0 obj\n${object}\nendobj\n`;
+  });
+  const xrefOffset = new TextEncoder().encode(pdf).length;
+  pdf += `xref\n0 ${objects.length + 1}\n0000000000 65535 f \n`;
+  offsets.slice(1).forEach((offset) => {
+    pdf += `${String(offset).padStart(10, '0')} 00000 n \n`;
+  });
+  pdf += `trailer\n<< /Size ${objects.length + 1} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+  return new TextEncoder().encode(pdf);
+};
 
 const riskTag = (risk: string, label = risk) => (
   <Tag
@@ -78,16 +181,27 @@ const Customer360Page: React.FC = () => {
   const [customerId, setCustomerId] = useState(
     params.get('customerId') ?? customers[0].id,
   );
-  const [modalOpen, setModalOpen] = useState(Boolean(params.get('customerId')));
-  const [detailModal, setDetailModal] = useState<'bill' | 'charge' | null>(
-    null,
-  );
+  const [detailOpen, setDetailOpen] = useState(Boolean(params.get('customerId')));
+  const [activeTab, setActiveTab] = useState('overview');
+  const [billingOpen, setBillingOpen] = useState(false);
+  const [billingMonth, setBillingMonth] = useState<Dayjs | null>(null);
+  const [billingQuickFilter, setBillingQuickFilter] = useState('12');
+  const [selectedStatement, setSelectedStatement] = useState<BillingStatement | null>(null);
+  const [chargeDetailsOpen, setChargeDetailsOpen] = useState(false);
+  const [invoicePreview, setInvoicePreview] = useState<{
+    title: string;
+    url: string;
+  } | null>(null);
   const [interactionType, setInteractionType] = useState('ALL');
   const customer = useMemo(
     () => findCustomerById(customerId) ?? customers[0],
     [customerId],
   );
-  const t = (id: string) => intl.formatMessage({ id });
+  const t = (
+    id: string,
+    defaultMessage = id,
+    values?: Record<string, string | number>,
+  ) => intl.formatMessage({ id, defaultMessage }, values);
   const enumLabel = (key: string) => t(`pages.customer.360.enum.${key}`);
   const valueTierLabel = (tier: string) =>
     t(`pages.customer.360.valueTier.${tier.toLowerCase().replaceAll(' ', '_')}`);
@@ -95,12 +209,30 @@ const Customer360Page: React.FC = () => {
   useEffect(() => {
     const id = params.get('customerId');
     if (id && id !== customerId) setCustomerId(id);
+    if (id) setDetailOpen(true);
   }, [params, customerId]);
+
+  useEffect(
+    () => () => {
+      if (invoicePreview) URL.revokeObjectURL(invoicePreview.url);
+    },
+    [invoicePreview],
+  );
 
   const selectCustomer = (id: string) => {
     setCustomerId(id);
     setParams({ customerId: id });
-    setModalOpen(true);
+    setActiveTab('overview');
+    setBillingOpen(false);
+    setSelectedStatement(null);
+    setInvoicePreview(null);
+    setDetailOpen(true);
+  };
+  const closeDetail = () => {
+    setDetailOpen(false);
+    setBillingOpen(false);
+    setSelectedStatement(null);
+    setInvoicePreview(null);
   };
   const goPricing = () =>
     history.push(
@@ -108,14 +240,26 @@ const Customer360Page: React.FC = () => {
     );
   const goBilling = () =>
     history.push(`/pricing-billing/billing/invoice?customerId=${customer.id}`);
-  const billDetails = useMemo(
-    () => getBillDetails(customer.id, customer.totalRevenueCurrency),
-    [customer],
-  );
-  const chargeRecords = useMemo(
-    () => getChargeRecords(customer.id, customer.totalRevenueCurrency),
-    [customer],
-  );
+  const visibleBillingStatements = useMemo(() => {
+    const statements = [...customer.billing.statements].sort((a, b) =>
+      b.billDate.localeCompare(a.billDate),
+    );
+    if (billingMonth) {
+      return statements.filter((statement) => statement.billDate.startsWith(billingMonth.format('YYYY-MM')));
+    }
+    if (billingQuickFilter === 'all') return statements;
+    return statements.slice(0, Number(billingQuickFilter));
+  }, [billingMonth, billingQuickFilter, customer.billing.statements]);
+
+  const previewInvoice = (statement: BillingStatement) => {
+    const markets = [customer.identity.registrationCountry, ...customer.operatingMarkets];
+    const template = markets.find((market) => ['China', 'Hong Kong', 'Singapore', 'Japan'].includes(market)) ?? 'Default';
+    const blob = new Blob([createMockInvoicePdf(customer, statement, template)], { type: 'application/pdf' });
+    setInvoicePreview({
+      title: `${statement.id} - ${t('pages.customer.360.billingModal.invoicePreview', 'Invoice PDF Preview')}`,
+      url: URL.createObjectURL(blob),
+    });
+  };
 
   const searchColumns: ProColumns<Customer360>[] = [
     {
@@ -361,6 +505,8 @@ const Customer360Page: React.FC = () => {
                 <Text>{contact.mobile}</Text>
                 <br />
                 <Text>{contact.email}</Text>
+                <br />
+                <Text type="secondary">WeChat: {contact.wechat ?? '-'}</Text>
               </Card>
             </Col>
           ))}
@@ -368,15 +514,37 @@ const Customer360Page: React.FC = () => {
       </ProCard>
       <ProCard title={t('pages.customer.360.detail.compliance')}>
         <Row gutter={16}>
-          {Object.entries(customer.compliance).map(([key, value]) => (
+          {(['amlRisk', 'blacklist', 'crossBorderTrading', 'fxQualification'] as const).map((key) => {
+            const value = customer.compliance[key];
+            return (
             <Col key={key} span={12} md={6}>
               <Statistic
                 title={t(`pages.customer.360.compliance.${key}`)}
                 value={enumLabel(value.toLowerCase())}
               />
-              {key === 'amlRisk' && riskTag(value, enumLabel(value.toLowerCase()))}
+              <Tag
+                color={
+                  key === 'amlRisk'
+                    ? value === 'LOW'
+                      ? 'success'
+                      : value === 'MEDIUM'
+                        ? 'warning'
+                        : 'error'
+                    : value === 'CLEAR' || value === 'ENABLED' || value === 'VALID'
+                      ? 'success'
+                      : value === 'POTENTIAL_MATCH' || value === 'RESTRICTED' || value === 'EXPIRING_SOON'
+                        ? 'warning'
+                        : 'error'
+                }
+              >
+                {enumLabel(value.toLowerCase())}
+              </Tag>
+              {key === 'fxQualification' && customer.compliance.fxQualificationExpiry && (
+                <Text type="secondary">Expires: {customer.compliance.fxQualificationExpiry}</Text>
+              )}
             </Col>
-          ))}
+            );
+          })}
         </Row>
       </ProCard>
     </Space>
@@ -408,6 +576,16 @@ const Customer360Page: React.FC = () => {
               </Col>
             </Row>
             <Progress percent={customer.banking.loanUtilization} />
+            <ProDescriptions
+              column={2}
+              dataSource={customer.banking}
+              columns={descriptionColumns(customer.banking, {
+                averageDepositBalance: t('pages.customer.360.banking.averageDepositBalance', 'Average Deposit Balance'),
+                ftpBenchmark: t('pages.customer.360.banking.ftpBenchmark', 'FTP Benchmark'),
+                averageDepositRate: t('pages.customer.360.banking.averageDepositRate', 'Average Deposit Rate'),
+                averageLendingRate: t('pages.customer.360.banking.averageLendingRate', 'Average Lending Rate'),
+              })}
+            />
             <Line
               height={240}
               data={depositData}
@@ -444,11 +622,36 @@ const Customer360Page: React.FC = () => {
                 </Col>
               ))}
             </Row>
+            <ProTable
+              rowKey="year"
+              search={false}
+              options={false}
+              pagination={false}
+              dataSource={customer.banking.feeHistory}
+              columns={[
+                { title: t('pages.customer.360.banking.year', 'Year'), dataIndex: 'year' },
+                { title: t('pages.customer.360.banking.annualFees', 'Annual Fees'), render: (_, row) => money(row.amount, row.currency) },
+              ]}
+            />
           </ProCard>
           <ProCard
             title={t('pages.customer.360.detail.crossBorderPayments')}
             style={{ marginTop: 16 }}
           >
+            <Row gutter={16}>
+              <Col span={12}>
+                <Statistic
+                  title={t('pages.customer.360.banking.crossBorderAnnualTransactions', 'Annual Transactions')}
+                  value={compact(customer.banking.crossBorderAnnualTransactions)}
+                />
+              </Col>
+              <Col span={12}>
+                <Statistic
+                  title={t('pages.customer.360.banking.preferredChannel', 'Preferred Channel')}
+                  value={customer.banking.preferredChannel}
+                />
+              </Col>
+            </Row>
             <Statistic
               title={t('pages.customer.360.banking.totalTransactionValue')}
               value={money(
@@ -456,6 +659,10 @@ const Customer360Page: React.FC = () => {
                 customer.banking.crossBorderValueCurrency,
               )}
             />
+            <Text type="secondary">
+              {t('pages.customer.360.banking.peakTransactionPeriod', 'Peak Transaction Period')}:{' '}
+              {customer.banking.peakTransactionPeriod}
+            </Text>
             <Space wrap>
               {customer.banking.crossBorderRoutes.map((route) => (
                 <Tag key={`${route.from}-${route.to}`}>
@@ -489,6 +696,13 @@ const Customer360Page: React.FC = () => {
             </Col>
           ))}
         </Row>
+        <Button
+          icon={<FileTextOutlined />}
+          onClick={() => setBillingOpen(true)}
+          style={{ marginTop: 16 }}
+        >
+          {t('pages.customer.360.action.viewBilling', 'View Billing')}
+        </Button>
       </ProCard>
     </Space>
   );
@@ -544,6 +758,8 @@ const Customer360Page: React.FC = () => {
                 ),
                 pricingPackage: t('pages.customer.360.pricing.pricingPackage'),
                 discount: t('pages.customer.360.pricing.discount'),
+                customizedPricingEnabled: t('pages.customer.360.pricing.customizedPricing', 'Customized Pricing'),
+                validUntil: t('pages.customer.360.pricing.validUntil', 'Valid Until'),
               })}
             />
           </ProCard>
@@ -720,6 +936,21 @@ const Customer360Page: React.FC = () => {
         </Col>
       </Row>
       <Row gutter={[16, 16]}>
+        <Col span={24}>
+          <ProCard title={t('pages.customer.360.detail.productRelationship', 'Product Relationship')}>
+            <Space wrap>
+              {customer.products
+                .filter((product) => product.status === 'ACTIVE')
+                .map((product) => (
+                  <Tag key={product.name} color="success">
+                    {product.name}
+                  </Tag>
+                ))}
+            </Space>
+          </ProCard>
+        </Col>
+      </Row>
+      <Row gutter={[16, 16]}>
         {customer.opportunities.map((opportunity) => (
           <Col key={opportunity.product} span={24} md={12}>
             <Card
@@ -802,32 +1033,6 @@ const Customer360Page: React.FC = () => {
     },
   ];
 
-  const formatDetailAmount = (amount: number, currency: string) =>
-    `${currency} ${amount.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-  const billColumns: ProColumns<BillDetailRecord>[] = [
-    { title: t('pages.customer.bill.chargeService'), dataIndex: 'charge_service' },
-    { title: t('pages.customer.bill.category'), dataIndex: 'category' },
-    { title: t('pages.customer.bill.date'), dataIndex: 'date' },
-    { title: t('pages.customer.bill.tariffItem'), dataIndex: 'tariff_item' },
-    { title: t('pages.customer.bill.pricingModel'), dataIndex: 'pricing_model' },
-    { title: t('pages.customer.bill.billingBasis'), dataIndex: 'billing_basis' },
-    { title: t('pages.customer.bill.amount'), dataIndex: 'amount', render: (_, row) => row.pricing_model === 'Rate' ? `${row.amount}%` : formatDetailAmount(row.amount, row.currency) },
-    { title: t('pages.customer.bill.quantity'), dataIndex: 'quantity' },
-    { title: t('pages.customer.bill.grossAmount'), dataIndex: 'gross_amount', render: (_, row) => formatDetailAmount(row.gross_amount, row.currency) },
-    { title: t('pages.customer.bill.netAmount'), dataIndex: 'net_amount', render: (_, row) => <Text strong>{formatDetailAmount(row.net_amount, row.currency)}</Text> },
-    { title: t('pages.customer.bill.remarks'), dataIndex: 'remarks' },
-  ];
-  const chargeColumns: ProColumns<ChargeRecord>[] = [
-    { title: t('pages.customer.charge.eventType'), dataIndex: 'event_type' },
-    { title: t('pages.customer.charge.eventTime'), dataIndex: 'event_time' },
-    { title: t('pages.customer.charge.serviceCode'), dataIndex: 'service_code' },
-    { title: t('pages.customer.charge.tariffItem'), dataIndex: 'tariff_item_name', render: (_, row) => <><Text strong>{row.tariff_item_name}</Text><br /><Text type="secondary">{row.tariff_item_no}</Text></> },
-    { title: t('pages.customer.charge.groupNumber'), dataIndex: 'group_number' },
-    { title: t('pages.customer.charge.activeAccounts'), dataIndex: 'total_active_account_count' },
-    { title: t('pages.customer.charge.changedAccounts'), dataIndex: 'total_changed_accounts' },
-    { title: t('pages.customer.charge.amount'), dataIndex: 'amount', render: (_, row) => <Text strong>{formatDetailAmount(row.amount, row.currency)}</Text> },
-  ];
-
   return (
     <PageContainer
       title={t('pages.customer.360.title')}
@@ -859,11 +1064,11 @@ const Customer360Page: React.FC = () => {
         />
       </ProCard>
       <Modal
-        open={modalOpen}
-        onCancel={() => setModalOpen(false)}
+        open={detailOpen}
+        onCancel={closeDetail}
         footer={null}
         width="min(1400px, calc(100vw - 32px))"
-        title={customer.customerName}
+        title={`${customer.customerName} - ${t('pages.customer.360.title')}`}
         destroyOnHidden
       >
         <ProCard
@@ -882,26 +1087,13 @@ const Customer360Page: React.FC = () => {
                 {t('pages.customer.360.action.billing')}
               </Button>
               <Button
-                icon={<FileTextOutlined />}
-                onClick={() => setDetailModal('bill')}
-              >
-                {t('pages.customer.bill.title')}
-              </Button>
-              <Button
-                icon={<ThunderboltOutlined />}
-                onClick={() => setDetailModal('charge')}
-              >
-                {t('pages.customer.charge.title')}
-              </Button>
-              <Button
                 icon={<TeamOutlined />}
-                onClick={() =>
-                  document
-                    .querySelector<HTMLElement>('.ant-tabs-tab:nth-child(6)')
-                    ?.click()
-                }
+                onClick={() => setActiveTab('relationship')}
               >
                 {t('pages.customer.360.action.groupView')}
+              </Button>
+              <Button icon={<UnorderedListOutlined />} onClick={() => setChargeDetailsOpen(true)}>
+                {t('pages.customer.360.action.chargeDetails', 'Charge Details')}
               </Button>
             </Space>
           }
@@ -993,41 +1185,179 @@ const Customer360Page: React.FC = () => {
           />
         </StatisticCard.Group>
         <ProCard style={{ marginTop: 16 }}>
-          <Tabs items={tabs} />
+          <Tabs activeKey={activeTab} onChange={setActiveTab} items={tabs} />
         </ProCard>
         <Modal
-          open={detailModal === 'bill'}
-          title={t('pages.customer.bill.title')}
-          onCancel={() => setDetailModal(null)}
+          title={
+            <Space>
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => {
+                  setBillingOpen(false);
+                  setInvoicePreview(null);
+                }}
+              >
+                {t('pages.customer.360.billingModal.backToCustomer', 'Back to Customer 360')}
+              </Button>
+              <Text strong>
+                {customer.customerName} - {t('pages.customer.360.billingModal.title', 'Billing Statements')}
+              </Text>
+            </Space>
+          }
+          open={billingOpen}
+          onCancel={() => {
+            setBillingOpen(false);
+            setInvoicePreview(null);
+          }}
           footer={null}
-          width="min(1400px, calc(100vw - 48px))"
+          width="100vw"
+          centered={false}
+          style={{ top: 0, maxWidth: '100vw', paddingBottom: 0 }}
+          styles={{
+            root: { height: '100vh' },
+            body: { height: 'calc(100vh - 72px)', overflow: 'auto', padding: 24 },
+          }}
         >
-          <ProTable
+          <Space wrap style={{ marginBottom: 16 }}>
+            <DatePicker
+              picker="month"
+              value={billingMonth}
+              placeholder={t('pages.customer.360.billingModal.filterMonth', 'Filter by month')}
+              onChange={(value) => {
+                setBillingMonth(value);
+                setBillingQuickFilter('');
+              }}
+            />
+            {[
+              ['3', t('pages.customer.360.billingModal.last3Months', 'Last 3 Months')],
+              ['6', t('pages.customer.360.billingModal.last6Months', 'Last 6 Months')],
+              ['12', t('pages.customer.360.billingModal.last12Months', 'Last 12 Months')],
+              ['all', t('pages.customer.360.enum.all', 'All')],
+            ].map(([value, label]) => (
+              <Button
+                key={value}
+                type={!billingMonth && billingQuickFilter === value ? 'primary' : 'default'}
+                onClick={() => {
+                  setBillingMonth(null);
+                  setBillingQuickFilter(value);
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+          </Space>
+          <ProTable<BillingStatement>
             rowKey="id"
             search={false}
             options={false}
-            pagination={{ pageSize: 5 }}
-            scroll={{ x: 1400 }}
-            dataSource={billDetails}
-            columns={billColumns}
+            pagination={{ pageSize: 6 }}
+            scroll={{ x: 1200 }}
+            dataSource={visibleBillingStatements}
+            columns={[
+              { title: t('pages.customer.360.billingModal.billDate', 'Bill Date'), dataIndex: 'billDate', sorter: (a, b) => b.billDate.localeCompare(a.billDate) },
+              { title: t('pages.customer.360.billingModal.paymentDueDate', 'Payment Due Date'), dataIndex: 'paymentDueDate' },
+              { title: t('pages.customer.360.billingModal.servicePeriod', 'Service Period'), render: (_, row) => `${row.servicePeriodStart} - ${row.servicePeriodEnd}` },
+              { title: t('pages.customer.360.billingModal.totalAmountDue', 'Total Amount Due'), dataIndex: 'totalAmountDue', render: (_, row) => money(row.totalAmountDue, row.currency) },
+              { title: t('pages.customer.360.billingModal.currency', 'Currency'), dataIndex: 'currency' },
+              { title: t('pages.customer.360.billingModal.cashManagementFee', 'Cash Management Fee'), dataIndex: 'cashManagementFee', render: (_, row) => money(row.cashManagementFee, row.currency) },
+              { title: t('pages.customer.360.billingModal.tradeFinanceFee', 'Trade Finance Fee'), dataIndex: 'tradeFinanceFee', render: (_, row) => money(row.tradeFinanceFee, row.currency) },
+              { title: t('pages.customer.360.billingModal.globalMarketsFee', 'Global Markets Transaction Fee'), dataIndex: 'globalMarketsTransactionFee', render: (_, row) => money(row.globalMarketsTransactionFee, row.currency) },
+              { title: t('pages.customer.360.billingModal.remarks', 'Remarks'), dataIndex: 'remarks' },
+              { title: t('pages.customer.360.billingModal.status', 'Status'), dataIndex: 'status', render: (_, row) => <Tag color={row.status === 'Paid' ? 'success' : row.status === 'Overdue' ? 'error' : 'processing'}>{enumLabel(row.status.toLowerCase())}</Tag> },
+              {
+                title: t('pages.customer.360.billingModal.actions', 'Actions'),
+                fixed: 'right',
+                render: (_, row) => (
+                  <Space>
+                    <Button type="link" onClick={() => setSelectedStatement(row)}>{t('pages.customer.360.billingModal.billDetails', 'Bill Details')}</Button>
+                    <Button type="link" icon={<FileTextOutlined />} onClick={() => previewInvoice(row)}>{t('pages.customer.360.billingModal.issueInvoice', 'Issue Invoice')}</Button>
+                  </Space>
+                ),
+              },
+            ]}
           />
         </Modal>
         <Modal
-          open={detailModal === 'charge'}
-          title={t('pages.customer.charge.title')}
-          onCancel={() => setDetailModal(null)}
+          title={t('pages.customer.360.billingModal.billDetails', 'Bill Details')}
+          open={Boolean(selectedStatement)}
+          onCancel={() => setSelectedStatement(null)}
           footer={null}
-          width="min(1400px, calc(100vw - 48px))"
+          width={1200}
+          destroyOnHidden
         >
-          <ProTable
+          {selectedStatement && (
+            <ProTable<BillDetailRecord>
+              rowKey="id"
+              search={false}
+              options={false}
+              pagination={false}
+              scroll={{ x: 1200 }}
+              dataSource={getBillDetails(customer.id, selectedStatement.currency)}
+              columns={[
+                { title: t('pages.customer.360.billingModal.chargeService', 'Charge Service'), dataIndex: 'charge_service' },
+                { title: t('pages.customer.360.billingModal.feeType', 'Fee Type'), dataIndex: 'category' },
+                { title: t('pages.customer.360.billingModal.date', 'Date'), dataIndex: 'date' },
+                { title: t('pages.customer.360.billingModal.tariffItem', 'Tariff Item'), dataIndex: 'tariff_item' },
+                { title: t('pages.customer.360.billingModal.pricingModel', 'Pricing Model'), dataIndex: 'pricing_model', render: (_, row) => enumLabel(row.pricing_model.toLowerCase()) },
+                { title: t('pages.customer.360.billingModal.chargeBasis', 'Charge Basis'), dataIndex: 'billing_basis' },
+                { title: t('pages.customer.360.billingModal.unitPrice', 'Unit Price'), dataIndex: 'amount', render: (_, row) => (row.pricing_model === 'Rate' ? `${row.amount}%` : formatAmount(row.amount, row.currency)) },
+                { title: t('pages.customer.360.billingModal.quantity', 'Quantity'), dataIndex: 'quantity' },
+                { title: t('pages.customer.360.billingModal.grossAmount', 'Gross Amount'), dataIndex: 'gross_amount', render: (_, row) => formatAmount(row.gross_amount, row.currency) },
+                { title: t('pages.customer.360.billingModal.netAmount', 'Net Amount'), dataIndex: 'net_amount', render: (_, row) => <Text strong>{formatAmount(row.net_amount, row.currency)}</Text> },
+                { title: t('pages.customer.360.billingModal.remarks', 'Remarks'), dataIndex: 'remarks', render: (value) => value ?? '-' },
+              ]}
+            />
+          )}
+        </Modal>
+        <Modal
+          title={t('pages.customer.360.action.chargeDetails', 'Charge Details')}
+          open={chargeDetailsOpen}
+          onCancel={() => setChargeDetailsOpen(false)}
+          footer={null}
+          width={1500}
+          destroyOnHidden
+        >
+          <ProTable<ChargeRecord>
             rowKey="id"
             search={false}
             options={false}
-            pagination={{ pageSize: 5 }}
-            scroll={{ x: 1100 }}
-            dataSource={chargeRecords}
-            columns={chargeColumns}
+            pagination={false}
+            scroll={{ x: 1200 }}
+            dataSource={getChargeRecords(customer.id, customer.totalRevenueCurrency)}
+            columns={[
+              { title: t('pages.customer.360.chargeDetails.eventType', 'Event Type'), dataIndex: 'event_type' },
+              { title: t('pages.customer.360.chargeDetails.eventTime', 'Event Time'), dataIndex: 'event_time' },
+              { title: t('pages.customer.360.chargeDetails.serviceCode', 'Service Code'), dataIndex: 'service_code' },
+              {
+                title: t('pages.customer.360.chargeDetails.tariffItem', 'Tariff Item'),
+                render: (_, row) => (
+                  <>
+                    <Text strong>{row.tariff_item_name}</Text> {row.tariff_item_no}
+                  </>
+                ),
+              },
+              { title: t('pages.customer.360.chargeDetails.groupNumber', 'Group Number'), dataIndex: 'group_number', render: (value) => value ?? '-' },
+              { title: t('pages.customer.360.chargeDetails.activeAccounts', 'Active Accounts'), dataIndex: 'total_active_account_count', render: (value) => value ?? '-' },
+              { title: t('pages.customer.360.chargeDetails.changedAccounts', 'Changed Accounts'), dataIndex: 'total_changed_accounts', render: (value) => value ?? '-' },
+            ]}
           />
+        </Modal>
+        <Modal
+          title={invoicePreview?.title}
+          open={Boolean(invoicePreview)}
+          footer={null}
+          width="min(1000px, calc(100vw - 32px))"
+          destroyOnHidden
+          onCancel={() => setInvoicePreview(null)}
+        >
+          {invoicePreview && (
+            <iframe
+              src={invoicePreview.url}
+              title={invoicePreview.title}
+              style={{ border: 0, height: '70vh', width: '100%' }}
+            />
+          )}
         </Modal>
       </Modal>
     </PageContainer>
