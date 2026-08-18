@@ -732,7 +732,7 @@ const PriceBookPage: React.FC = () => {
     {
       title: t('pages.pricing.priceBook.col.hierarchy'),
       dataIndex: 'product',
-      width: 160,
+      width: 300,
       render: (_, r) => (
         !isPricePointNode(r) && r.serviceGroup ? <Text strong>{r.serviceGroup}</Text> : !isPricePointNode(r) ? <Space size={4}>
           <BankOutlined style={{ color: '#1677ff', fontSize: 12 }} />
