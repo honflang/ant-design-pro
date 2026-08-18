@@ -32,7 +32,6 @@
 * Multi-product Bundle（多产品组合）
 * Discount / Rebate（折扣与返佣）
 * Base Revenue vs Adjusted Revenue（调整前后收入）
-* Margin Estimation（预估利润率）
 * Scenario Comparison（方案对比）
 * Submit for Approval（提交审批）
 
@@ -78,7 +77,7 @@ Pricing Configuration
 │ Client / Market      │ Revenue Summary                          │
 │ Product Selection    │ Product Breakdown                        │
 │ Discount / Rebate    │ Scenario Comparison                      │
-│ Volume Assumption    │ Margin Estimate                          │
+│ Volume Assumption    │ Risk & Contribution Summary              │
 │ [Run] [Save] [Submit]│                                          │
 └──────────────────────┴──────────────────────────────────────────┘
 │ Simulation History                                            │
@@ -96,7 +95,7 @@ Customer 360 Profile
    ↓ 读取客户画像与关系数据
 Pricing Simulation Context
    ↓ 调整可模拟的价格参数与场景假设
-Revenue / Margin / Risk Outcome
+Revenue / Risk Outcome
    ↓ 选择方案
 Approval-ready Pricing Proposal
    ↓ 审批通过后
@@ -122,7 +121,7 @@ Effective Pricing → Billing Run
 | Banking Relationship | 存款余额、贷款余额、交易量、交易金额、Fee Discount | 支撑交易量、客户贡献度和产品组合假设的默认值 |
 | Value & Contribution | Gross Revenue、Risk-adjusted Contribution、RFM Value、Customer Value | 评估调整后收入是否改善客户价值与关系贡献 |
 | Pricing Profile | Customized Pricing、历史折扣、可接受费率阈值、价格敏感度 | 识别当前方案是否超出历史或客户可接受范围 |
-| Risk & Compliance | Credit Rating、Risk Level、PD、AML Risk、FX Qualification、跨境权限 | 限制不适用的产品/市场，并影响预估利润率与审批提示 |
+| Risk & Compliance | Credit Rating、Risk Level、PD、AML Risk、FX Qualification、跨境权限 | 限制不适用的产品/市场，并影响风险提示与审批说明 |
 | Group Relationship | 集团授信敞口、额度使用率、母子公司关系 | 支持集团级定价视角和集中度风险提示 |
 | Interaction & Insights | 最近议价、客户反馈、Pricing Opportunity、推荐行动 | 为特殊条件和方案说明提供可追溯的业务依据 |
 
@@ -165,7 +164,7 @@ Scenario B: Relationship Investment
   - moderate discount within historical range
 Scenario C: Aggressive Retention
   - larger discount or rebate
-  - explicit margin and risk warning
+   - explicit risk warning
 ```
 
 每个场景需要显示：
@@ -177,7 +176,6 @@ Volume Assumption
 Discount + Rebate
 Base Revenue → Adjusted Revenue
 Risk-adjusted Contribution Impact
-Estimated Margin
 Customer Value / Pricing Threshold Check
 Approval Recommendation
 ```
@@ -222,7 +220,6 @@ Products: Cash Management + Trade Finance + FX Services
 Discount: -15%
 Base Revenue: SGD 12,500
 Adjusted Revenue: SGD 10,625
-Estimated Margin: 68%
 ```
 
 ---
@@ -239,12 +236,11 @@ Simulation History 列表至少包含：
 6. Base Revenue
 7. Adjusted Revenue
 8. Effective Discount
-9. Estimated Margin
-10. Review Cycle（参见四-A.6，展示基准复核周期与到期提示）
-11. Status
-12. Created By
-13. Created At
-14. Actions
+9. Review Cycle（参见四-A.6，展示基准复核周期与到期提示）
+10. Status
+11. Created By
+12. Created At
+13. Actions
 
 Actions：
 
@@ -311,7 +307,6 @@ Simulation Details
 Base Revenue
 Adjusted Revenue
 Discount Amount
-Estimated Margin
 Product Breakdown
 Customer 360 Context Snapshot
 Benchmark Reference（发布机构 / 基准名称 / 下次复核日期，参见四-A.6）
@@ -336,7 +331,7 @@ Scenario C (-20%)
 
 ```text
 Scenario | Customer Value | Products / Penetration | Revenue Impact
-         | Margin | Risk-adjusted Contribution | Threshold / Risk Flag
+         | Risk-adjusted Contribution | Threshold / Risk Flag
 ```
 
 结果区应明确标识：`Mock calculation based on Customer 360 snapshot`，避免 Demo 用户误认为这是实时银行定价或风险决策结果。
@@ -373,7 +368,7 @@ Estimated Revenue Impact
 ```text
 Simulation Input
    ↓
-Revenue/Margin Outcome
+Revenue / Risk Outcome
    ↓
 Scenario Selection
    ↓
@@ -432,7 +427,6 @@ interface SimulationResult {
   adjustedRevenue: number;
   discountAmount: number;
   effectiveDiscountPercent: number;
-  estimatedMarginPercent: number;
    riskAdjustedContributionImpact: number;
    pricingThresholdStatus: 'WITHIN_RANGE' | 'OUTSIDE_RANGE' | 'REQUIRES_JUSTIFICATION';
    complianceWarnings: string[];

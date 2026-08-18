@@ -54,6 +54,7 @@ export default {
   'menu.pricing-billing.dashboard': 'Dashboard',
   'menu.pricing-billing.pricing': 'Pricing Configuration',
   'menu.pricing-billing.pricing.price-book': 'Price Book',
+  'menu.pricing-billing.pricing.activity-pricing': 'Activity Pricing',
   'menu.pricing-billing.pricing.rules': 'Pricing Rules',
   'menu.pricing-billing.pricing.simulation': 'Pricing Simulation',
   'menu.pricing-billing.pricing.approval': 'Approval Center',

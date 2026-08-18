@@ -98,6 +98,12 @@ export default [
             component: './pricing-billing/pricing/price-book',
           },
           {
+            name: 'activity-pricing',
+            icon: 'gift',
+            path: '/pricing-billing/pricing/activity-pricing',
+            component: './pricing-billing/pricing/activity-pricing',
+          },
+          {
             name: 'rules',
             icon: 'control',
             path: '/pricing-billing/pricing/rules',

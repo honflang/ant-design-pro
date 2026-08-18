@@ -90,7 +90,6 @@ type SimulationRecord = {
   adjustedRevenue: number;
   discountAmount: number;
   effectiveDiscountPercent: number;
-  estimatedMarginPercent: number;
   riskAdjustedContributionImpact: number;
   pricingThresholdStatus:
     | 'WITHIN_RANGE'
@@ -126,7 +125,6 @@ type SimulationResult = {
     label: string;
     discountPercent: number;
     adjustedRevenue: number;
-    marginPercent: number;
     contributionImpact: number;
     thresholdStatus: SimulationRecord['pricingThresholdStatus'];
   }>;
@@ -246,16 +244,6 @@ const createSimulation = (
   const effectiveDiscountPercent =
     Math.abs(values.discountPercent) + rebatePercent;
   const adjustedRevenue = baseRevenue * (1 - effectiveDiscountPercent / 100);
-  const riskPenalty =
-    customer.value.riskLevel === 'HIGH'
-      ? 8
-      : customer.value.riskLevel === 'MEDIUM'
-        ? 4
-        : 1;
-  const estimatedMarginPercent = Math.max(
-    35,
-    Math.min(90, 78 - effectiveDiscountPercent * 0.55 - riskPenalty),
-  );
   const baselineDiscount = parsePercent(customer.pricing.discount);
   const thresholdStatus =
     Math.abs(values.discountPercent) <= baselineDiscount + 3
@@ -297,7 +285,6 @@ const createSimulation = (
     adjustedRevenue,
     discountAmount: baseRevenue - adjustedRevenue,
     effectiveDiscountPercent,
-    estimatedMarginPercent,
     riskAdjustedContributionImpact: adjustedRevenue - baseRevenue,
     pricingThresholdStatus: thresholdStatus,
     complianceWarnings,
@@ -344,10 +331,6 @@ const createSimulation = (
     return {
       ...item,
       adjustedRevenue: scenarioRevenue,
-      marginPercent: Math.max(
-        35,
-        78 - Math.abs(item.discountPercent) * 0.55 - riskPenalty,
-      ),
       contributionImpact: scenarioRevenue - baseRevenue,
       thresholdStatus:
         Math.abs(item.discountPercent) <= baselineDiscount + 3
@@ -529,12 +512,6 @@ const SimulationPage: React.FC = () => {
       search: false,
     },
     {
-      title: t('pages.pricing.simulation.col.margin', 'Margin'),
-      dataIndex: 'estimatedMarginPercent',
-      render: (value) => `${Number(value).toFixed(1)}%`,
-      search: false,
-    },
-    {
       title: t('pages.pricing.simulation.col.reviewCycle', 'Review Cycle'),
       dataIndex: ['benchmarkSource', 'reviewCycle'],
       render: (_, row) => (
@@ -659,11 +636,6 @@ const SimulationPage: React.FC = () => {
       dataIndex: 'discountAmount',
       render: (value, row) =>
         formatAmount(marketCurrencyMap[row.market] ?? 'USD', Number(value)),
-    },
-    {
-      title: t('pages.pricing.simulation.result.margin', 'Estimated Margin'),
-      dataIndex: 'estimatedMarginPercent',
-      render: (value) => `${Number(value).toFixed(1)}%`,
     },
     { title: t('pages.pricing.simulation.result.threshold', 'Pricing Threshold'), dataIndex: 'pricingThresholdStatus', render: (value) => t(`pages.pricing.simulation.threshold.${value}`, String(value)) },
     {
@@ -964,8 +936,11 @@ const SimulationPage: React.FC = () => {
                   </Col>
                   <Col xs={24} md={8}>
                     <Statistic
-                      title={t('pages.pricing.simulation.result.margin', 'Estimated Margin')}
-                      value={`${result.record.estimatedMarginPercent.toFixed(1)}%`}
+                      title={t('pages.pricing.simulation.result.contributionImpact', 'Risk-adjusted Contribution Impact')}
+                      value={formatAmount(
+                        marketCurrencyMap[result.record.market] ?? 'USD',
+                        result.record.riskAdjustedContributionImpact,
+                      )}
                     />
                   </Col>
                 </Row>
@@ -1151,8 +1126,11 @@ const CardMini: React.FC<{
       <Text type="secondary">
         {translate('pages.pricing.simulation.scenario.discount', 'Discount')}{' '}
         {scenario.discountPercent}% ·{' '}
-        {translate('pages.pricing.simulation.scenario.margin', 'Margin')}{' '}
-        {scenario.marginPercent.toFixed(1)}%
+        {translate(
+          'pages.pricing.simulation.result.contributionImpact',
+          'Risk-adjusted Contribution Impact',
+        )}{' '}
+        {formatAmount(currency, scenario.contributionImpact)}
       </Text>
       <div style={{ marginTop: 8 }}>
         <Tag

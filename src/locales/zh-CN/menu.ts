@@ -54,6 +54,7 @@ export default {
   'menu.pricing-billing.dashboard': '仪表盘',
   'menu.pricing-billing.pricing': '定价配置',
   'menu.pricing-billing.pricing.price-book': '价格手册',
+  'menu.pricing-billing.pricing.activity-pricing': '活动定价',
   'menu.pricing-billing.pricing.rules': '定价规则',
   'menu.pricing-billing.pricing.simulation': '定价模拟',
   'menu.pricing-billing.pricing.approval': '审批中心',
