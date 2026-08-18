@@ -692,6 +692,117 @@ $2.31M
 
 ---
 
+## 9.5 Billing Statement
+
+在 Contribution 区域提供 **View Billing** 入口。
+
+用户点击后，打开账单明细 Drawer / Modal，展示当前客户的账单列表。
+
+### 9.5.1 筛选
+
+账单列表顶部提供 **月份筛选**。
+
+支持：
+
+```text
+Year/Month Selector
+Quick Filters: Last 3 Months / Last 6 Months / Last 12 Months / All
+```
+
+默认展示最近 12 个月账单。
+
+### 9.5.2 账单列表
+
+按 **账单日期倒序** 排列（最新账单在最前）。
+
+表格字段：
+
+| 账单日期 | 付款截止日期 | 服务周期开始日期 | 服务周期结束日期 | 本期应付款总额 | 币种 | 现金管理费 | 贸易融资费 | 全球市场交易费 | 附言 |
+| -------- | ------------ | ---------------- | ---------------- | -------------- | ---- | ---------- | ---------- | -------------- | ---- |
+
+Mock 示例（ABC Global Holdings）：
+
+```text
+2026-08-01    2026-08-15    2026-07-01    2026-07-31    $420,000    USD    $120,000    $180,000    $120,000    Monthly service fee
+2026-07-01    2026-07-15    2026-06-01    2026-06-30    $390,000    USD    $110,000    $170,000    $110,000    Monthly service fee
+2026-06-01    2026-06-15    2026-05-01    2026-05-31    $385,000    USD    $105,000    $175,000    $105,000    Monthly service fee
+```
+
+操作列：
+
+```text
+[Bill Details]    [Download Invoice]
+```
+
+### 9.5.3 账单详情
+
+点击 **Bill Details** 打开二级 Drawer / Modal，展示单笔账单的明细。
+
+显示字段：
+
+```text
+Bill Date
+Payment Due Date
+Service Period Start
+Service Period End
+Billing Currency
+Total Amount Due
+Cash Management Fee
+Trade Finance Fee
+Global Markets Transaction Fee
+Other Fees
+Remarks
+Status
+  - Issued
+  - Paid
+  - Overdue
+```
+
+明细行项目示例：
+
+```text
+Cash Management Fee
+  Account Maintenance        $45,000
+  Wire Transfer (outbound)   $38,000
+  Collection Services        $37,000
+
+Trade Finance Fee
+  Letter of Credit           $120,000
+  Trade Loan                 $60,000
+
+Global Markets Transaction Fee
+  FX Spot                    $85,000
+  FX Forward                 $35,000
+```
+
+### 9.5.4 发票下载
+
+点击 **Download Invoice** 触发 Mock 下载。
+
+根据客户 **Registration Country / Operating Markets** 提供不同的固定发票模板：
+
+| 国家/地区 | 模板说明 |
+| --------- | -------- |
+| China     | 中国大陆增值税普通发票模板 |
+| Hong Kong | 香港商业发票模板 |
+| Singapore | 新加坡 Tax Invoice 模板 |
+| Japan     | 日本 請求書模板 |
+| Default   | 国际通用 Invoice 模板 |
+
+模板选择规则：
+
+```text
+优先取 Registration Country 对应模板；
+若未命中，取 Operating Markets 第一个匹配市场；
+否则使用 Default 模板。
+```
+
+发票内容为静态模板 + 当前账单数据填充，不连接真实税务或发票系统。
+
+所有文件以 PDF / CSV Mock 下载即可，无需真实文件生成服务。
+
+---
+
 # 10. Value & Pricing Tab
 
 这是 Customer 360 与 Pricing Management 的核心连接。
@@ -1063,6 +1174,8 @@ interface Customer360 {
 
   banking: BankingRelationship;
 
+  billing: BillingProfile;
+
   value: CustomerValue;
 
   pricing: PricingProfile;
@@ -1091,6 +1204,34 @@ interface CustomerContact {}
 interface ComplianceProfile {}
 
 interface BankingRelationship {}
+
+interface BillingProfile {
+  statements: BillingStatement[];
+}
+
+interface BillingStatement {
+  billDate: string;
+  paymentDueDate: string;
+  servicePeriodStart: string;
+  servicePeriodEnd: string;
+  totalAmountDue: number;
+  currency: string;
+  cashManagementFee: number;
+  tradeFinanceFee: number;
+  globalMarketsTransactionFee: number;
+  otherFees?: number;
+  remarks: string;
+  status: 'Issued' | 'Paid' | 'Overdue';
+  details?: BillingStatementDetail[];
+}
+
+interface BillingStatementDetail {
+  category: string;
+  items: {
+    name: string;
+    amount: number;
+  }[];
+}
 
 interface CustomerValue {}
 
@@ -1242,12 +1383,12 @@ customerId
 
 ## Customer → Billing
 
+### 入口一：Header [Billing]
+
 ```text
 Customer 360
     ↓
-Banking Relationship
-    ↓
-View Billing
+Header [Billing]
     ↓
 Billing Management
 ```
@@ -1256,6 +1397,29 @@ Billing Management
 
 ```text
 customerId
+```
+
+### 入口二：Banking Relationship → View Billing
+
+```text
+Customer 360
+    ↓
+Banking Relationship
+    ↓
+View Billing
+    ↓
+Billing Statement Drawer
+```
+
+本入口不跳转页面，直接在 Customer 360 页面内打开账单明细。
+
+支持：
+
+```text
+Month filter
+Bill list (sorted by bill date desc)
+Bill details
+Invoice download (region-specific template)
 ```
 
 ---
@@ -1394,6 +1558,11 @@ External Intelligence
 * [ ] Transaction Banking
 * [ ] Cross-border Payment
 * [ ] Contribution
+* [ ] Billing Statement
+  * [ ] Month filter
+  * [ ] Bill list sorted by bill date desc
+  * [ ] Bill details drawer
+  * [ ] Invoice download with region-specific template
 
 ### Pricing
 

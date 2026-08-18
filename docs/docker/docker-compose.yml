@@ -1,0 +1,10 @@
+name: pricing-billing-project
+services:
+  pricing-billing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: 'pricing-billing:latest'
+    restart: unless-stopped
+    ports:
+      - '9000:9000'
