@@ -48,19 +48,27 @@ Dashboard 应该让用户一眼看到：
 
 ### 菜单结构
 
-Dashboard 无需额外菜单项，它是系统默认的根路由。访问 `/pricing-billing` 自动进入 Dashboard。
+“定价与计费”不再作为菜单目录。Dashboard 及各业务分组直接显示在主导航中，访问 `/pricing-billing` 仍会自动进入 Dashboard。
 
-系统菜单示例：
+主导航菜单示例：
 
 ```text
-Pricing & Billing (menu.pricing-billing)
-  ├── Dashboard [当前页，自动进入]
-  ├── Pricing Configuration (menu.pricing)
-  ├── Billing Management (menu.billing)
-  ├── Regional Compliance (menu.regional)
-  │   └── Tax Configuration (menu.regional.tax)
-  ├── Invoice Management (menu.invoice)
-  └── Approvals (menu.approvals)
+Dashboard (menu.pricing-billing-dashboard) [当前页，自动进入]
+Pricing Configuration (menu.pricing)
+  ├── Price Book (menu.pricing.price-book)
+  ├── Activity Pricing (menu.pricing.activity-pricing)
+  ├── Pricing Rules (menu.pricing.rules)
+  ├── Pricing Simulation (menu.pricing.simulation)
+  └── Approval Center (menu.pricing.approval)
+Billing Management (menu.billing)
+  ├── Billing Configuration (menu.billing.configuration)
+  ├── Billing Run (menu.billing.run)
+  └── Invoice Management (menu.billing.invoice)
+Performance Management (menu.performance)
+Customer Management (menu.customer)
+Regional Configuration (menu.regional)
+  └── Tax Configuration (menu.regional.tax)
+Reports (menu.reports)
 ```
 
 ### 路由配置

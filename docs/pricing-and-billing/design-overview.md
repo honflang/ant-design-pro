@@ -20,8 +20,11 @@
 
 ## 二、菜单与路由结构
 
+“定价与计费”不再作为单独的顶层菜单目录，仪表盘及各业务分组直接显示在主导航中。各业务分组内部仍保留原有子菜单结构。
+
 ```
-/pricing-billing               ← 系统总览仪表盘
+/pricing-billing               ← 重定向到系统总览仪表盘
+/pricing-billing/dashboard     ← 系统总览仪表盘
 /pricing-billing/pricing        ← 定价管理（父菜单）
   /pricing-billing/pricing/price-book     ← 价格手册
   /pricing-billing/pricing/rules          ← 定价规则
@@ -48,8 +51,12 @@
 ```ts
 {
   path: '/pricing-billing',
-  name: 'pricing-billing',
-  icon: 'bank',
+  redirect: '/pricing-billing/dashboard',
+},
+{
+  path: '/pricing-billing/dashboard',
+  name: 'pricing-billing-dashboard',
+  icon: 'dashboard',
   component: './pricing-billing/dashboard',
 },
 {

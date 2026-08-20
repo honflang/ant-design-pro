@@ -52,184 +52,177 @@ export default [
 
   {
     path: '/pricing-billing',
-    name: 'pricing-billing',
-    icon: 'bank',
+    redirect: '/pricing-billing/dashboard',
+  },
+  {
+    path: '/pricing-billing/dashboard',
+    name: 'pricing-billing-dashboard',
+    icon: 'dashboard',
+    component: './pricing-billing/dashboard',
+  },
+  {
+    path: '/pricing-billing/regional',
+    name: 'regional',
+    icon: 'global',
     routes: [
       {
-        path: '/pricing-billing',
-        redirect: '/pricing-billing/dashboard',
-      },
-      {
-        path: '/pricing-billing/dashboard',
-        name: 'dashboard',
-        icon: 'dashboard',
-        component: './pricing-billing/dashboard',
-      },
-      {
         path: '/pricing-billing/regional',
-        name: 'regional',
-        icon: 'global',
-        routes: [
-          {
-            path: '/pricing-billing/regional',
-            redirect: '/pricing-billing/regional/tax',
-          },
-          {
-            name: 'tax',
-            icon: 'audit',
-            path: '/pricing-billing/regional/tax',
-            component: './pricing-billing/regional/tax',
-          },
-        ],
+        redirect: '/pricing-billing/regional/tax',
       },
       {
-        path: '/pricing-billing/pricing',
-        name: 'pricing',
-        icon: 'dollarCircle',
-        routes: [
-          {
-            path: '/pricing-billing/pricing',
-            redirect: '/pricing-billing/pricing/price-book',
-          },
-          {
-            name: 'price-book',
-            icon: 'book',
-            path: '/pricing-billing/pricing/price-book',
-            component: './pricing-billing/pricing/price-book',
-          },
-          {
-            name: 'activity-pricing',
-            icon: 'gift',
-            path: '/pricing-billing/pricing/activity-pricing',
-            component: './pricing-billing/pricing/activity-pricing',
-          },
-          {
-            name: 'rules',
-            icon: 'control',
-            path: '/pricing-billing/pricing/rules',
-            component: './pricing-billing/pricing/rules',
-          },
-          {
-            name: 'simulation',
-            icon: 'dotChart',
-            path: '/pricing-billing/pricing/simulation',
-            component: './pricing-billing/pricing/simulation',
-          },
-          {
-            name: 'approval',
-            icon: 'checkCircle',
-            path: '/pricing-billing/pricing/approval',
-            component: './pricing-billing/pricing/approval',
-          },
-        ],
-      },
-      {
-        path: '/pricing-billing/billing',
-        name: 'billing',
-        icon: 'creditCard',
-        routes: [
-          {
-            path: '/pricing-billing/billing',
-            redirect: '/pricing-billing/billing/configuration',
-          },
-          {
-            name: 'configuration',
-            icon: 'setting',
-            path: '/pricing-billing/billing/configuration',
-            component: './pricing-billing/billing/configuration',
-          },
-          {
-            name: 'run',
-            icon: 'playCircle',
-            path: '/pricing-billing/billing/run',
-            component: './pricing-billing/billing/run',
-          },
-          {
-            name: 'invoice',
-            icon: 'fileText',
-            path: '/pricing-billing/billing/invoice',
-            component: './pricing-billing/billing/invoice',
-          },
-        ],
-      },
-      {
-        path: '/pricing-billing/performance',
-        name: 'performance',
-        icon: 'lineChart',
-        routes: [
-          {
-            path: '/pricing-billing/performance',
-            redirect: '/pricing-billing/performance/revenue',
-          },
-          {
-            name: 'revenue',
-            icon: 'barChart',
-            path: '/pricing-billing/performance/revenue',
-            component: './pricing-billing/performance/revenue',
-          },
-          {
-            name: 'deal',
-            icon: 'fund',
-            path: '/pricing-billing/performance/deal',
-            component: './pricing-billing/performance/deal',
-          },
-        ],
-      },
-      {
-        path: '/pricing-billing/customer',
-        name: 'customer',
-        icon: 'team',
-        routes: [
-          {
-            path: '/pricing-billing/customer',
-            redirect: '/pricing-billing/customer/360',
-          },
-          {
-            name: '360',
-            icon: 'user',
-            path: '/pricing-billing/customer/360',
-            component: './pricing-billing/customer/360',
-          },
-          {
-            name: 'portfolio',
-            icon: 'cluster',
-            path: '/pricing-billing/customer/portfolio',
-            component: './pricing-billing/customer/portfolio',
-          },
-          {
-            name: 'deal-pricing-request',
-            icon: 'fileAdd',
-            path: '/pricing-billing/customer/deal-pricing-request',
-            component: './pricing-billing/customer/deal-pricing-request',
-          },
-        ],
-      },
-      {
-        path: '/pricing-billing/reports',
-        name: 'reports',
-        icon: 'barChart',
-        routes: [
-          {
-            path: '/pricing-billing/reports',
-            redirect: '/pricing-billing/reports/analytics',
-          },
-          {
-            name: 'analytics',
-            icon: 'pieChart',
-            path: '/pricing-billing/reports/analytics',
-            component: './pricing-billing/reports/analytics',
-          },
-        ],
-      },
-      {
-        path: '/pricing-billing/approvals/:approvalId',
-        redirect: '/pricing-billing/pricing/approval',
+        name: 'tax',
+        icon: 'audit',
+        path: '/pricing-billing/regional/tax',
+        component: './pricing-billing/regional/tax',
       },
     ],
   },
   {
+    path: '/pricing-billing/pricing',
+    name: 'pricing',
+    icon: 'dollarCircle',
+    routes: [
+      {
+        path: '/pricing-billing/pricing',
+        redirect: '/pricing-billing/pricing/price-book',
+      },
+      {
+        name: 'price-book',
+        icon: 'book',
+        path: '/pricing-billing/pricing/price-book',
+        component: './pricing-billing/pricing/price-book',
+      },
+      {
+        name: 'activity-pricing',
+        icon: 'gift',
+        path: '/pricing-billing/pricing/activity-pricing',
+        component: './pricing-billing/pricing/activity-pricing',
+      },
+      {
+        name: 'rules',
+        icon: 'control',
+        path: '/pricing-billing/pricing/rules',
+        component: './pricing-billing/pricing/rules',
+      },
+      {
+        name: 'simulation',
+        icon: 'dotChart',
+        path: '/pricing-billing/pricing/simulation',
+        component: './pricing-billing/pricing/simulation',
+      },
+      {
+        name: 'approval',
+        icon: 'checkCircle',
+        path: '/pricing-billing/pricing/approval',
+        component: './pricing-billing/pricing/approval',
+      },
+    ],
+  },
+  {
+    path: '/pricing-billing/billing',
+    name: 'billing',
+    icon: 'creditCard',
+    routes: [
+      {
+        path: '/pricing-billing/billing',
+        redirect: '/pricing-billing/billing/configuration',
+      },
+      {
+        name: 'configuration',
+        icon: 'setting',
+        path: '/pricing-billing/billing/configuration',
+        component: './pricing-billing/billing/configuration',
+      },
+      {
+        name: 'run',
+        icon: 'playCircle',
+        path: '/pricing-billing/billing/run',
+        component: './pricing-billing/billing/run',
+      },
+      {
+        name: 'invoice',
+        icon: 'fileText',
+        path: '/pricing-billing/billing/invoice',
+        component: './pricing-billing/billing/invoice',
+      },
+    ],
+  },
+  {
+    path: '/pricing-billing/performance',
+    name: 'performance',
+    icon: 'lineChart',
+    routes: [
+      {
+        path: '/pricing-billing/performance',
+        redirect: '/pricing-billing/performance/revenue',
+      },
+      {
+        name: 'revenue',
+        icon: 'barChart',
+        path: '/pricing-billing/performance/revenue',
+        component: './pricing-billing/performance/revenue',
+      },
+      {
+        name: 'deal',
+        icon: 'fund',
+        path: '/pricing-billing/performance/deal',
+        component: './pricing-billing/performance/deal',
+      },
+    ],
+  },
+  {
+    path: '/pricing-billing/customer',
+    name: 'customer',
+    icon: 'team',
+    routes: [
+      {
+        path: '/pricing-billing/customer',
+        redirect: '/pricing-billing/customer/360',
+      },
+      {
+        name: '360',
+        icon: 'user',
+        path: '/pricing-billing/customer/360',
+        component: './pricing-billing/customer/360',
+      },
+      {
+        name: 'portfolio',
+        icon: 'cluster',
+        path: '/pricing-billing/customer/portfolio',
+        component: './pricing-billing/customer/portfolio',
+      },
+      {
+        name: 'deal-pricing-request',
+        icon: 'fileAdd',
+        path: '/pricing-billing/customer/deal-pricing-request',
+        component: './pricing-billing/customer/deal-pricing-request',
+      },
+    ],
+  },
+  {
+    path: '/pricing-billing/reports',
+    name: 'reports',
+    icon: 'barChart',
+    routes: [
+      {
+        path: '/pricing-billing/reports',
+        redirect: '/pricing-billing/reports/analytics',
+      },
+      {
+        name: 'analytics',
+        icon: 'pieChart',
+        path: '/pricing-billing/reports/analytics',
+        component: './pricing-billing/reports/analytics',
+      },
+    ],
+  },
+  {
+    path: '/pricing-billing/approvals/:approvalId',
+    redirect: '/pricing-billing/pricing/approval',
+  },
+  {
     path: '/',
-    redirect: '/dashboard/analysis',
+    redirect: '/pricing-billing/dashboard',
   },
   {
     component: './exception/404',
