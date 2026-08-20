@@ -34,6 +34,7 @@ import {
   Space,
   Table,
   Tag,
+  Timeline,
 } from 'antd';
 import React, { useMemo, useState } from 'react';
 import { customers, findCustomerById } from '../360/mock';
@@ -71,7 +72,7 @@ const isEditable = (request: DealPricingRequest) =>
 
 const DealPricingRequestPage: React.FC = () => {
   const intl = useIntl();
-  const { message } = App.useApp();
+  const { message, modal } = App.useApp();
   const [form] = Form.useForm<DealPricingRequestFormValues>();
   const [requests, setRequests] = useState(initialDealPricingRequests);
   const [editingRequest, setEditingRequest] =
@@ -161,11 +162,46 @@ const DealPricingRequestPage: React.FC = () => {
   };
 
   const addPriceDetail = () => {
-    const existing = new Set(editingDetails.map((detail) => detail.id));
-    const next = priceDetailOptions().find(
-      (detail) => !existing.has(detail.id),
+    setEditingDetails((details) => [
+      ...details,
+      {
+        id: `new-${Date.now()}-${details.length}`,
+        feeItem: '',
+        chargeService: '',
+        tariffItemCode: '',
+        pricingModel: 'FLAT',
+        chargeBasis: '',
+        baselinePrice: 0,
+        requestedPriceType: 'AMOUNT',
+        requestedPrice: undefined,
+        currency: 'USD',
+        mockAnnualVolume: 0,
+      },
+    ]);
+  };
+
+  const selectFeeItem = (rowId: string, tariffItemCode: string) => {
+    const template = priceDetailOptions().find(
+      (option) => option.tariffItemCode === tariffItemCode,
     );
-    if (next) setEditingDetails((details) => [...details, next]);
+    if (!template) return;
+    setEditingDetails((details) =>
+      details.map((detail) =>
+        detail.id === rowId
+          ? {
+              ...detail,
+              feeItem: template.feeItem,
+              chargeService: template.chargeService,
+              tariffItemCode: template.tariffItemCode,
+              pricingModel: template.pricingModel,
+              chargeBasis: template.chargeBasis,
+              baselinePrice: template.baselinePrice,
+              currency: template.currency,
+              mockAnnualVolume: template.mockAnnualVolume,
+            }
+          : detail,
+      ),
+    );
   };
 
   const createUpdatedRequest = (
@@ -206,6 +242,10 @@ const DealPricingRequestPage: React.FC = () => {
       message.error(
         t('pages.dealPricingRequest.validation.priceDetailsRequired'),
       );
+      return;
+    }
+    if (editingDetails.some((detail) => !detail.feeItem)) {
+      message.error(t('pages.dealPricingRequest.validation.feeItemRequired'));
       return;
     }
     const updated = createUpdatedRequest(values);
@@ -288,10 +328,91 @@ const DealPricingRequestPage: React.FC = () => {
     );
   };
 
+  const withdrawRequest = (request: DealPricingRequest) => {
+    modal.confirm({
+      title: t('pages.dealPricingRequest.confirm.withdrawTitle'),
+      content: t('pages.dealPricingRequest.confirm.withdrawContent'),
+      onOk: () => {
+        setRequests((current) =>
+          current.map((item) =>
+            item.id === request.id
+              ? { ...item, status: 'WITHDRAWN' as const }
+              : item,
+          ),
+        );
+        setDetailRequest((current) =>
+          current && current.id === request.id
+            ? { ...current, status: 'WITHDRAWN' }
+            : current,
+        );
+        message.success(t('pages.dealPricingRequest.message.withdrawn'));
+      },
+    });
+  };
+
+  const buildTimelineItems = (request: DealPricingRequest) => {
+    const items = [
+      {
+        children: `${t('pages.dealPricingRequest.timeline.requested')} · ${new Date(request.requestedAt).toLocaleString()}`,
+      },
+    ];
+    if (request.simulation) {
+      items.push({
+        children: `${t('pages.dealPricingRequest.timeline.simulated')} · ${new Date(request.simulation.simulatedAt).toLocaleString()}`,
+      });
+    }
+    if (
+      request.status === 'PENDING_APPROVAL' ||
+      request.status === 'APPROVED' ||
+      request.status === 'REJECTED'
+    ) {
+      items.push({
+        children: t('pages.dealPricingRequest.timeline.submitted'),
+      });
+    }
+    if (request.status === 'APPROVED') {
+      items.push({ children: t('pages.dealPricingRequest.timeline.approved') });
+    }
+    if (request.status === 'REJECTED') {
+      items.push({ children: t('pages.dealPricingRequest.timeline.rejected') });
+    }
+    if (request.status === 'WITHDRAWN') {
+      items.push({
+        children: t('pages.dealPricingRequest.timeline.withdrawn'),
+      });
+    }
+    return items;
+  };
+
+  const feeItemCatalog = priceDetailOptions();
+  const usedTariffItemCodes = new Set(
+    editingDetails
+      .filter((detail) => detail.tariffItemCode)
+      .map((detail) => detail.tariffItemCode),
+  );
+
   const priceColumns = [
     {
       title: t('pages.dealPricingRequest.priceDetails.feeItem'),
-      dataIndex: 'feeItem',
+      render: (_: unknown, detail: DealPricingPriceDetail) => (
+        <ProFormSelect
+          fieldProps={{
+            value: detail.tariffItemCode || undefined,
+            placeholder: t(
+              'pages.dealPricingRequest.priceDetails.selectFeeItem',
+            ),
+            onChange: (value) => selectFeeItem(detail.id, value as string),
+          }}
+          options={feeItemCatalog.map((option) => ({
+            label: option.feeItem,
+            value: option.tariffItemCode,
+            disabled:
+              usedTariffItemCodes.has(option.tariffItemCode) &&
+              option.tariffItemCode !== detail.tariffItemCode,
+          }))}
+          noStyle
+        />
+      ),
     },
     {
       title: t('pages.dealPricingRequest.priceDetails.service'),
@@ -304,7 +425,7 @@ const DealPricingRequestPage: React.FC = () => {
     {
       title: t('pages.dealPricingRequest.priceDetails.baselinePrice'),
       render: (_: unknown, detail: DealPricingPriceDetail) =>
-        money(detail.baselinePrice, detail.currency),
+        detail.feeItem ? money(detail.baselinePrice, detail.currency) : '-',
     },
     {
       title: t('pages.dealPricingRequest.priceDetails.requestedPriceType'),
@@ -312,6 +433,7 @@ const DealPricingRequestPage: React.FC = () => {
         <ProFormSelect
           fieldProps={{
             value: detail.requestedPriceType,
+            disabled: !detail.feeItem,
             onChange: (value) =>
               updateDetail(detail.id, 'requestedPriceType', value),
           }}
@@ -329,7 +451,7 @@ const DealPricingRequestPage: React.FC = () => {
       title: t('pages.dealPricingRequest.priceDetails.requestedPrice'),
       render: (_: unknown, detail: DealPricingPriceDetail) => (
         <InputNumber
-          disabled={detail.requestedPriceType === 'WAIVER'}
+          disabled={!detail.feeItem || detail.requestedPriceType === 'WAIVER'}
           min={0}
           value={
             detail.requestedPriceType === 'WAIVER' ? 0 : detail.requestedPrice
@@ -584,6 +706,7 @@ const DealPricingRequestPage: React.FC = () => {
             : t('pages.dealPricingRequest.modal.editTitle')
         }
         width={1100}
+        zIndex={1000}
       >
         <ProForm<DealPricingRequestFormValues>
           form={form}
@@ -716,19 +839,67 @@ const DealPricingRequestPage: React.FC = () => {
         </ProForm>
         <ProCard
           style={{ marginTop: 16 }}
-          title={t('pages.dealPricingRequest.form.priceDetails')}
+          title={`${t('pages.dealPricingRequest.form.priceDetails')} (${editingDetails.length})`}
           extra={
             <Button onClick={() => setPriceDetailsOpen(true)}>
               {t('pages.dealPricingRequest.action.editPriceDetails')}
             </Button>
           }
         >
+          <Table
+            columns={[
+              {
+                title: t('pages.dealPricingRequest.priceDetails.feeItem'),
+                dataIndex: 'feeItem',
+              },
+              {
+                title: t(
+                  'pages.dealPricingRequest.priceDetails.requestedPriceType',
+                ),
+                render: (_: unknown, detail: DealPricingPriceDetail) =>
+                  enumLabel('priceType', detail.requestedPriceType),
+              },
+              {
+                title: t(
+                  'pages.dealPricingRequest.priceDetails.requestedPrice',
+                ),
+                render: (_: unknown, detail: DealPricingPriceDetail) =>
+                  detail.requestedPriceType === 'WAIVER'
+                    ? money(0, detail.currency)
+                    : String(detail.requestedPrice ?? '-'),
+              },
+              {
+                title: t('pages.dealPricingRequest.priceDetails.baselinePrice'),
+                render: (_: unknown, detail: DealPricingPriceDetail) =>
+                  detail.feeItem
+                    ? money(detail.baselinePrice, detail.currency)
+                    : '-',
+              },
+            ]}
+            dataSource={editingDetails}
+            locale={{
+              emptyText: t('pages.dealPricingRequest.priceDetails.empty'),
+            }}
+            pagination={false}
+            rowKey="id"
+            size="small"
+          />
+        </ProCard>
+        <ProCard
+          style={{ marginTop: 16 }}
+          title={t('pages.dealPricingRequest.form.simulationSummary')}
+        >
           {editingRequest?.simulation ? (
             <Alert
               message={t('pages.dealPricingRequest.simulation.mockLabel')}
               type="info"
             />
-          ) : null}
+          ) : (
+            <Alert
+              message={t('pages.dealPricingRequest.simulation.empty')}
+              type="warning"
+            />
+          )}
           {editingRequest?.simulation ? (
             <ProDescriptions
               column={3}
@@ -769,6 +940,7 @@ const DealPricingRequestPage: React.FC = () => {
         open={priceDetailsOpen}
         title={t('pages.dealPricingRequest.priceDetails.title')}
         width={1200}
+        zIndex={1010}
       >
         <Space style={{ marginBottom: 16 }}>
           <Button
@@ -791,82 +963,295 @@ const DealPricingRequestPage: React.FC = () => {
 
       <Drawer
         destroyOnHidden
+        extra={
+          detailRequest ? (
+            <Space>
+              {isEditable(detailRequest) ? (
+                <Button
+                  icon={<EditOutlined />}
+                  onClick={() => {
+                    openEditRequest(detailRequest);
+                    setDetailRequest(null);
+                  }}
+                >
+                  {t('pages.dealPricingRequest.action.edit')}
+                </Button>
+              ) : null}
+              {detailRequest.status === 'PENDING_APPROVAL' ? (
+                <Button danger onClick={() => withdrawRequest(detailRequest)}>
+                  {t('pages.dealPricingRequest.action.withdraw')}
+                </Button>
+              ) : null}
+            </Space>
+          ) : null
+        }
         onClose={() => setDetailRequest(null)}
         open={Boolean(detailRequest)}
         title={t('pages.dealPricingRequest.drawer.title')}
-        width={760}
+        width={840}
       >
         {detailRequest ? (
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
-            <ProDescriptions
-              column={2}
-              dataSource={detailRequest}
-              columns={[
-                {
-                  title: t('pages.dealPricingRequest.table.customerId'),
-                  dataIndex: 'customerId',
-                },
-                {
-                  title: t('pages.dealPricingRequest.table.customerName'),
-                  dataIndex: 'customerName',
-                },
-                {
-                  title: t('pages.dealPricingRequest.table.requestType'),
-                  dataIndex: 'requestType',
-                  render: (_, item) =>
-                    enumLabel('requestType', item.requestType),
-                },
-                {
-                  title: t('pages.dealPricingRequest.table.requestReason'),
-                  dataIndex: 'requestReason',
-                  render: (_, item) =>
-                    enumLabel('requestReason', item.requestReason),
-                },
-                {
-                  title: t('pages.dealPricingRequest.table.benchmarkSource'),
-                  dataIndex: 'benchmarkSource',
-                  render: (_, item) =>
-                    enumLabel('benchmarkSource', item.benchmarkSource),
-                },
-                {
-                  title: t('pages.dealPricingRequest.table.status'),
-                  dataIndex: 'status',
-                  render: (_, item) => (
-                    <Tag color={requestStatusColors[item.status]}>
-                      {enumLabel('status', item.status)}
-                    </Tag>
-                  ),
-                },
-              ]}
-            />
-            <ProTable<DealPricingPriceDetail>
-              columns={[
-                {
-                  title: t('pages.dealPricingRequest.priceDetails.feeItem'),
-                  dataIndex: 'feeItem',
-                },
-                {
-                  title: t(
-                    'pages.dealPricingRequest.priceDetails.baselinePrice',
-                  ),
-                  render: (_, item) => money(item.baselinePrice, item.currency),
-                },
-                {
-                  title: t(
-                    'pages.dealPricingRequest.priceDetails.requestedPrice',
-                  ),
-                  render: (_, item) =>
-                    item.requestedPriceType === 'WAIVER'
-                      ? money(0, item.currency)
-                      : String(item.requestedPrice ?? '-'),
-                },
-              ]}
-              dataSource={detailRequest.priceDetails}
-              headerTitle={t('pages.dealPricingRequest.priceDetails.title')}
-              pagination={false}
-              rowKey="id"
-              search={false}
-            />
+            <ProCard
+              title={t('pages.dealPricingRequest.drawer.requestProfile')}
+            >
+              <ProDescriptions
+                column={2}
+                dataSource={detailRequest}
+                columns={[
+                  {
+                    title: t('pages.dealPricingRequest.table.requestId'),
+                    dataIndex: 'id',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.status'),
+                    dataIndex: 'status',
+                    render: (_, item) => (
+                      <Tag color={requestStatusColors[item.status]}>
+                        {enumLabel('status', item.status)}
+                      </Tag>
+                    ),
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.requestType'),
+                    dataIndex: 'requestType',
+                    render: (_, item) =>
+                      enumLabel('requestType', item.requestType),
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.requestReason'),
+                    dataIndex: 'requestReason',
+                    render: (_, item) =>
+                      enumLabel('requestReason', item.requestReason),
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.reasonDescription'),
+                    dataIndex: 'reasonDescription',
+                    span: 2,
+                    render: (_, item) => item.reasonDescription || '-',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.requestedBy'),
+                    dataIndex: 'requestedBy',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.requestedAt'),
+                    dataIndex: 'requestedAt',
+                    valueType: 'dateTime',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.ecr'),
+                    dataIndex: 'ecrPricingRequested',
+                    render: (_, item) => (
+                      <Tag
+                        color={item.ecrPricingRequested ? 'gold' : 'default'}
+                      >
+                        {item.ecrPricingRequested
+                          ? t('pages.dealPricingRequest.enum.yes')
+                          : t('pages.dealPricingRequest.enum.no')}
+                      </Tag>
+                    ),
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.ecrReason'),
+                    dataIndex: 'ecrReason',
+                    render: (_, item) => item.ecrReason || '-',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.ecrReference'),
+                    dataIndex: 'ecrReference',
+                    render: (_, item) => item.ecrReference || '-',
+                  },
+                ]}
+              />
+            </ProCard>
+            <ProCard
+              title={t('pages.dealPricingRequest.drawer.customerSnapshot')}
+            >
+              <ProDescriptions
+                column={2}
+                dataSource={detailRequest}
+                columns={[
+                  {
+                    title: t('pages.dealPricingRequest.table.customerId'),
+                    dataIndex: 'customerId',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.customerName'),
+                    dataIndex: 'customerName',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.table.customerSegment'),
+                    dataIndex: 'customerSegment',
+                  },
+                  {
+                    title: t(
+                      'pages.dealPricingRequest.table.relationshipManager',
+                    ),
+                    dataIndex: 'relationshipManager',
+                  },
+                ]}
+              />
+            </ProCard>
+            <ProCard title={t('pages.dealPricingRequest.drawer.benchmarkInfo')}>
+              <ProDescriptions
+                column={2}
+                dataSource={detailRequest}
+                columns={[
+                  {
+                    title: t('pages.dealPricingRequest.table.benchmarkSource'),
+                    dataIndex: 'benchmarkSource',
+                    render: (_, item) =>
+                      enumLabel('benchmarkSource', item.benchmarkSource),
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.benchmarkPlan'),
+                    dataIndex: 'benchmarkPlan',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.market'),
+                    dataIndex: 'market',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.currency'),
+                    dataIndex: 'currency',
+                  },
+                  {
+                    title: t(
+                      'pages.dealPricingRequest.form.effectiveStartDate',
+                    ),
+                    dataIndex: 'effectiveStartDate',
+                  },
+                  {
+                    title: t('pages.dealPricingRequest.form.effectiveEndDate'),
+                    dataIndex: 'effectiveEndDate',
+                    render: (_, item) => item.effectiveEndDate || '-',
+                  },
+                ]}
+              />
+            </ProCard>
+            <ProCard title={t('pages.dealPricingRequest.form.priceDetails')}>
+              <Table<DealPricingPriceDetail>
+                columns={[
+                  {
+                    title: t('pages.dealPricingRequest.priceDetails.feeItem'),
+                    dataIndex: 'feeItem',
+                  },
+                  {
+                    title: t(
+                      'pages.dealPricingRequest.priceDetails.requestedPriceType',
+                    ),
+                    render: (_, item) =>
+                      enumLabel('priceType', item.requestedPriceType),
+                  },
+                  {
+                    title: t(
+                      'pages.dealPricingRequest.priceDetails.baselinePrice',
+                    ),
+                    render: (_, item) =>
+                      money(item.baselinePrice, item.currency),
+                  },
+                  {
+                    title: t(
+                      'pages.dealPricingRequest.priceDetails.requestedPrice',
+                    ),
+                    render: (_, item) =>
+                      item.requestedPriceType === 'WAIVER'
+                        ? money(0, item.currency)
+                        : String(item.requestedPrice ?? '-'),
+                  },
+                ]}
+                dataSource={detailRequest.priceDetails}
+                pagination={false}
+                rowKey="id"
+                size="small"
+              />
+            </ProCard>
+            <ProCard
+              title={t('pages.dealPricingRequest.form.simulationSummary')}
+            >
+              {detailRequest.simulation ? (
+                <>
+                  <Alert
+                    message={t('pages.dealPricingRequest.simulation.mockLabel')}
+                    type="info"
+                  />
+                  <StatisticCard.Group style={{ marginTop: 16 }}>
+                    <StatisticCard
+                      statistic={{
+                        title: t(
+                          'pages.dealPricingRequest.simulation.baseline',
+                        ),
+                        value: money(
+                          detailRequest.simulation.baselineAnnualizedFee,
+                          detailRequest.currency,
+                        ),
+                      }}
+                    />
+                    <StatisticCard
+                      statistic={{
+                        title: t(
+                          'pages.dealPricingRequest.simulation.requested',
+                        ),
+                        value: money(
+                          detailRequest.simulation.requestedAnnualizedFee,
+                          detailRequest.currency,
+                        ),
+                      }}
+                    />
+                    <StatisticCard
+                      statistic={{
+                        title: t('pages.dealPricingRequest.simulation.impact'),
+                        value: money(
+                          detailRequest.simulation.estimatedRevenueImpact,
+                          detailRequest.currency,
+                        ),
+                      }}
+                    />
+                    <StatisticCard
+                      statistic={{
+                        title: t(
+                          'pages.dealPricingRequest.simulation.discount',
+                        ),
+                        value: `${detailRequest.simulation.requestedDiscountPercent.toFixed(1)}%`,
+                      }}
+                    />
+                  </StatisticCard.Group>
+                  <ProDescriptions
+                    column={1}
+                    style={{ marginTop: 16 }}
+                    dataSource={detailRequest.simulation}
+                    columns={[
+                      {
+                        title: t(
+                          'pages.dealPricingRequest.simulation.threshold',
+                        ),
+                        dataIndex: 'thresholdStatus',
+                        render: (_, item) => (
+                          <Tag
+                            color={
+                              item.thresholdStatus === 'WITHIN_THRESHOLD'
+                                ? 'success'
+                                : 'warning'
+                            }
+                          >
+                            {enumLabel('thresholdStatus', item.thresholdStatus)}
+                          </Tag>
+                        ),
+                      },
+                    ]}
+                  />
+                </>
+              ) : (
+                <Alert
+                  message={t('pages.dealPricingRequest.simulation.empty')}
+                  type="warning"
+                />
+              )}
+            </ProCard>
+            <ProCard title={t('pages.dealPricingRequest.drawer.timeline')}>
+              <Timeline items={buildTimelineItems(detailRequest)} />
+            </ProCard>
           </Space>
         ) : null}
       </Drawer>

@@ -227,7 +227,9 @@ Withdraw (PENDING_APPROVAL only)
 ├──────────────────────────────────────────────────────────────────────────────┤
 │ 1. Customer & Request Context                                                │
 │ 2. Benchmark and Effective Period                                             │
-│ 3. Requested Price Details                                      [Edit lines] │
+│ 3. Requested Price Details (2 items)                            [Edit lines] │
+│    Fee Item | Requested Price Type | Requested Price | Baseline Price        │
+│    ...current price detail rows (read-only preview)...                       │
 │ 4. ECR Pricing                                                               │
 │ 5. Simulation Summary                                                        │
 ├──────────────────────────────────────────────────────────────────────────────┤
@@ -291,6 +293,23 @@ ECR Reference               optional text
 
 ECR 仅作为申请标识和审批路由提示。Demo 中不调用真实 ECR 系统，也不计算实际资本或授信影响。
 
+## 6.4 Requested Price Details Preview
+
+`3. Requested Price Details` 分区中，`[Edit lines]` 按钮下方必须展示当前申请草稿已添加的价格明细只读预览列表，而不是仅显示按钮：
+
+```text
+Fee Item | Requested Price Type | Requested Price | Baseline Price
+```
+
+规则：
+
+* 预览列表数据来源于当前编辑中的价格明细状态，新增、编辑或删除费用项后，主表单内的预览必须同步刷新，无需重新打开弹窗。
+* 尚未添加任何费用项时，展示项目既有风格的空状态提示，并引导点击 `Edit lines`。
+* 预览列表仅用于概览，不提供行内编辑；修改价格明细仍需通过 `Edit lines` 打开第 7 节的独立弹窗。
+* 分区标题旁以 `(N items)` 形式展示当前费用项数量，`N` 随价格明细数量实时更新。
+* `5. Simulation Summary` 必须作为独立分区（独立 ProCard）展示，不得与 `3. Requested Price Details` 合并为同一分区；两者各自拥有独立标题，避免申请价格明细预览与试算结果混排在同一个信息块中。
+* 尚未运行过本版本试算时，`5. Simulation Summary` 分区展示醒目的“待试算”提示，引导用户点击 `Run Simulation`；试算完成后替换为 Mock 试算结果标签与关键指标。
+
 ---
 
 # 7. Requested Price Details Modal
@@ -298,6 +317,8 @@ ECR 仅作为申请标识和审批路由提示。Demo 中不调用真实 ECR 系
 申请价格明细必须通过独立弹窗维护，避免主申请表单过长。点击 `Edit lines` 后打开嵌套 Modal；关闭时仅回填当前申请草稿，不影响主列表筛选状态。
 
 建议宽度 `1200`，使用可编辑 `ProTable` 或项目已有可编辑表格模式，并支持横向滚动。
+
+嵌套弹窗必须完整显示在 `Deal Pricing Request` 主弹窗之上，不得被主弹窗遮挡或与主弹窗内容重叠错位：主弹窗保持打开但不可交互（遮罩层置于主弹窗与嵌套弹窗之间），嵌套弹窗关闭后焦点与滚动位置回到主弹窗原有状态。若使用 antd `Modal`，需保证嵌套弹窗的层级（`zIndex`）高于主弹窗，且不要在打开嵌套弹窗时卸载或隐藏主弹窗。
 
 ```text
 ┌──────────────────────────────────────────────────────────────────────────────┐
@@ -323,7 +344,9 @@ ECR 仅作为申请标识和审批路由提示。Demo 中不调用真实 ECR 系
 12. Remarks
 13. Actions
 
-`Fee Item` 从当前 Tariff / Promotion 的可用收费项中选择；选择后自动带出以下只读字段：
+点击 `+ Add Fee Item` 新增一行时，`Fee Item` 单元格默认为空，不预置默认收费项；必须由用户从当前 Tariff / Promotion 的可用收费项中主动选择（下拉 Select），系统不得自动带出或预填 `Fee Item` 本身。
+
+用户选择 `Fee Item` 后，自动带出以下只读字段：
 
 ```text
 Charge Service
@@ -333,6 +356,8 @@ Charge Basis
 Baseline Price
 Currency
 ```
+
+用户选定的 `Fee Item` 名称必须作为该行的展示文本呈现在申请价格明细列表的 `Fee Item` 列中（选择完成后不再保持下拉编辑态），与其余只读字段一并作为该行记录的一部分展示。
 
 申请价格输入规则：
 
@@ -426,7 +451,16 @@ Mock Simulation Summary
 Status and Approval Timeline
 ```
 
-详情中所有申请价格明细均为只读。若申请仍为 `DRAFT` 或 `SIMULATED`，提供 `Edit` 与 `Run Simulation` 操作；若为 `PENDING_APPROVAL`，仅提供 `Withdraw`；审批完成后仅保留查看能力。
+各分区建议以独立 `ProCard` 呈现，具体内容：
+
+* `Request Profile`：Request ID、Request Type、Request Reason、Reason Description、Requested By、Requested At、ECR Pricing Requested（含 ECR Reason / ECR Reference）。
+* `Customer Snapshot`：Customer ID、Customer Name、Customer Segment、Relationship Manager。
+* `Benchmark Information`：Benchmark Source、Tariff / Promotion Plan、Market、Currency、Effective Start/End Date。
+* `Requested Price Details`：只读明细表，至少展示 Fee Item、Requested Price Type、Requested Price、Baseline Price。
+* `Mock Simulation Summary`：使用 `StatisticCard` 展示 Baseline Annualized Fee、Requested Annualized Fee、Estimated Revenue Impact、Estimated Discount / Uplift、Threshold Check；尚未试算时展示引导提示，不得留空。
+* `Status and Approval Timeline`：使用 `Timeline` 按 Requested → Simulated → Submitted → Approved / Rejected / Withdrawn 顺序展示已发生的节点，节点文案需与申请当前状态一致，未发生的节点不展示。
+
+详情中所有申请价格明细均为只读。若申请仍为 `DRAFT` 或 `SIMULATED`，提供 `Edit` 与 `Run Simulation` 操作；若为 `PENDING_APPROVAL`，仅提供 `Withdraw`；审批完成后仅保留查看能力。Drawer 顶部操作区（`extra`）根据申请状态展示对应按钮，不允许的操作不显示。
 
 ---
 
