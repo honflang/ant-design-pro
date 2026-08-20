@@ -346,6 +346,14 @@ Compliant Invoice Delivery
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括计费周期、账户类型、币种、汇率方式、发票格式、状态、表格列、按钮、校验和确认提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.billing.configuration.*` 与菜单专属 key。
+- 客户名称、账户号、币种代码和 Mock 配置值可以保留标准值；配置枚举和状态显示名称必须国际化。
+- 切换 `zh-CN` / `en-US` 后，配置列表、统计卡、编辑 Drawer、详情和确认操作都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

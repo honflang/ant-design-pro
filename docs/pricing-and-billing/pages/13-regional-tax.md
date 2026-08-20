@@ -19,7 +19,7 @@
 - ✅ 查看 Drawer（ProDescriptions）
 - ✅ Tax Calculation Preview（前端实时计算，支持 Tax Inclusive / Exclusive / Exempt）
 - ✅ 启用/禁用规则（含 Modal 确认）
-- ✅ 完整 i18n（`useIntl()`，en-US + zh-CN）
+- ✅ 仅中英文 i18n（`useIntl()`，`en-US` + `zh-CN`）
 - ✅ Mock API（CRUD + toggle-status）
 
 ---

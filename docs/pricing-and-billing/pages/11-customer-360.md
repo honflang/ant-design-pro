@@ -75,8 +75,8 @@ Agent 开始执行前必须：
 本页面（含 Customer 360 Detail Modal、Banking Relationship 全屏账单视图、账单详情弹窗、发票预览）必须与项目现有 i18n 机制保持一致：
 
 * 所有展示文案（标题、表格列名、按钮、筛选项、状态 / 枚举标签、空值占位符）必须使用 `useIntl().formatMessage` 或 `<FormattedMessage />`，禁止硬编码字符串。
-* 文案 key 统一放在 `src/locales/*/pages.ts`，命名沿用已有前缀 `pages.customer.360.*`（如 `pages.customer.360.billingModal.*`、`pages.customer.360.enum.*`）。
-* **至少同时维护 `zh-CN` 和 `en-US` 两个语言包**，新增字段（如账单明细表格的“收费服务 / 费用类型 / 日期 / 资费项目 / 定价模型 / 计费基础 / 单价 / 数量 / 毛额 / 净额 / 备注”，以及 `Flat` / `Rate` / `Tiered` 定价模型枚举）必须在两个语言包中都补齐，不能只依赖代码里的英文兜底文案。
+* 文案 key 统一放在 `src/locales/zh-CN/pages.ts` 和 `src/locales/en-US/pages.ts`，命名沿用已有前缀 `pages.customer.360.*`（如 `pages.customer.360.billingModal.*`、`pages.customer.360.enum.*`）。
+* **仅维护 `zh-CN` 和 `en-US` 两个语言包**，新增字段（如账单明细表格的“收费服务 / 费用类型 / 日期 / 资费项目 / 定价模型 / 计费基础 / 单价 / 数量 / 毛额 / 净额 / 备注”，以及 `Flat` / `Rate` / `Tiered` 定价模型枚举）必须在两个语言包中都补齐，不能只依赖代码里的英文兜底文案。
 * Mock 数据本身（客户名称、备注等自由文本）可以保持单一语言，不强制翻译，但所有 UI 标签、按钮和状态文案必须国际化。
 * 切换语言（zh-CN ↔ en-US）后，Customer 360 Modal、全屏账单视图、账单详情弹窗、发票预览标题必须正确显示对应语言，不出现遗漏 key 报错或英文/中文混排。
 
@@ -1681,3 +1681,9 @@ External Intelligence
 * [ ] 不新增不必要依赖
 * [ ] 遵循现有 Ant Design Pro 项目结构
 * [ ] 页面全部文案（含账单列表、账单详情、发票预览）已使用 i18n key，`zh-CN` 与 `en-US` 语言包均已补齐，无硬编码文案
+
+---
+
+## 国际化范围（仅中文 / English）
+
+Customer 360 及其所有 Modal、Drawer、Tab、账单视图、发票预览和关系图只支持 `zh-CN` 与 `en-US`。除这两个语言包外，不要求新增其他 locale；Mock 客户名称、备注和外部业务自由文本可以保留标准值。

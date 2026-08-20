@@ -327,6 +327,14 @@ Audit Trail
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括审批状态、申请类型、优先级、表格列、按钮、操作菜单、详情字段、校验和审批结果提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.pricing.approval.*` 与菜单专属 key。
+- Request ID、客户名称、规则编号等 Mock 业务数据可以保留标准值；状态、类型和审批动作的显示名称必须国际化。
+- 切换 `zh-CN` / `en-US` 后，审批列表、详情 Drawer、操作 Modal 和审批时间线都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

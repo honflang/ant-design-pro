@@ -42,7 +42,7 @@ Agent 开始执行前必须：
 4. 不升级依赖，不引入新的 UI Framework 或重量级计算库。
 5. 不修改无关页面；不手工修改生成的 `src/services/ant-design-pro/`。
 6. 页面必须支持中英文国际化；所有 UI 文案均使用 `useIntl().formatMessage` 或 `<FormattedMessage />`，不得硬编码中英文文案。
-7. 新增文案统一写入 `src/locales/*/pages.ts`，使用前缀 `pages.dealPricingRequest.*`；至少同时维护 `zh-CN` 和 `en-US`。
+7. 新增文案统一写入 `src/locales/zh-CN/pages.ts` 和 `src/locales/en-US/pages.ts`，使用前缀 `pages.dealPricingRequest.*`；仅支持 `zh-CN` 和 `en-US`。
 
 ---
 
@@ -625,7 +625,7 @@ FX Transaction Commission
 
 # 13. Internationalization
 
-所有 UI 文案写入 `src/locales/*/pages.ts`。至少维护：
+所有 UI 文案写入 `src/locales/zh-CN/pages.ts` 和 `src/locales/en-US/pages.ts`。仅维护这两个语言包：
 
 ```text
 pages.dealPricingRequest.title

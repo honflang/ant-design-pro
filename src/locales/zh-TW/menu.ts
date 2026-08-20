@@ -50,6 +50,7 @@ export default {
   'menu.editor.mind': '腦圖編輯器',
   'menu.editor.koni': '拓撲編輯器',
   'menu.pricing-billing-dashboard': '儀表盤',
+  'menu.catalog': '產品與服務目錄',
   'menu.pricing': '定價配置',
   'menu.billing': '計費管理',
   'menu.regional': '區域配置',

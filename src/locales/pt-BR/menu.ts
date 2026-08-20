@@ -52,6 +52,7 @@ export default {
   'menu.editor.mind': 'Mind Editor',
   'menu.editor.koni': 'Koni Editor',
   'menu.pricing-billing-dashboard': 'Dashboard',
+  'menu.catalog': 'Product & Service Catalog',
   'menu.pricing': 'Pricing Configuration',
   'menu.billing': 'Billing Management',
   'menu.regional': 'Regional Configuration',

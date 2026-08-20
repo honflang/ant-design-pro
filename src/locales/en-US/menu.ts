@@ -51,6 +51,7 @@ export default {
   'menu.editor.koni': 'Koni Editor',
   'menu.chatbot': 'AI Assistant',
   'menu.pricing-billing-dashboard': 'Dashboard',
+  'menu.catalog': 'Product & Service Catalog',
   'menu.pricing': 'Pricing Configuration',
   'menu.pricing.price-book': 'Price Book',
   'menu.pricing.activity-pricing': 'Activity Pricing',

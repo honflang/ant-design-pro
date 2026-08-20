@@ -61,6 +61,12 @@ export default [
     component: './pricing-billing/dashboard',
   },
   {
+    path: '/pricing-billing/catalog',
+    name: 'catalog',
+    icon: 'appstore',
+    component: './pricing-billing/catalog',
+  },
+  {
     path: '/pricing-billing/regional',
     name: 'regional',
     icon: 'global',

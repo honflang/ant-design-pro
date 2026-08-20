@@ -50,6 +50,7 @@ export default {
   'menu.editor.mind': 'マインドエディター',
   'menu.editor.koni': 'コニエディター',
   'menu.pricing-billing-dashboard': 'Dashboard',
+  'menu.catalog': 'Product & Service Catalog',
   'menu.pricing': 'Pricing Configuration',
   'menu.billing': 'Billing Management',
   'menu.regional': 'Regional Configuration',

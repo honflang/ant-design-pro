@@ -302,6 +302,14 @@ Pricing Governance Loop
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括客户、产品、交易状态、绩效指标、表格列、筛选器、按钮、详情和提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.performance.deal.*` 与菜单专属 key。
+- 客户名称、产品名称、交易编号和 Mock 数值可以保留业务标准值；状态、类型和指标说明必须国际化。
+- 切换 `zh-CN` / `en-US` 后，交易绩效列表、详情、筛选器和操作提示都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

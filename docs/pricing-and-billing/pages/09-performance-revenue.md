@@ -315,6 +315,14 @@ Actionable Alerts
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括指标标题、图表标题、筛选器、市场、状态、表格列、按钮、空态和错误提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.performance.revenue.*` 与菜单专属 key。
+- 市场、币种、金额和 Mock 统计数据可以保留标准值；指标、状态和图表图例的展示文案必须国际化。
+- 切换 `zh-CN` / `en-US` 后，统计卡、图表、筛选器、表格和导出提示都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

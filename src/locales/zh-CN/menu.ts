@@ -51,6 +51,7 @@ export default {
   'menu.editor.koni': '拓扑编辑器',
   'menu.chatbot': 'AI 助手',
   'menu.pricing-billing-dashboard': '仪表盘',
+  'menu.catalog': '产品与服务目录',
   'menu.pricing': '定价配置',
   'menu.pricing.price-book': '价格手册',
   'menu.pricing.activity-pricing': '活动定价',

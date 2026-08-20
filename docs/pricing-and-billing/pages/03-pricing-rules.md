@@ -399,6 +399,14 @@ Transparent Billing Result
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括规则范围、调整类型、审批状态、表格列、表单字段、按钮、计算步骤、校验和确认提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.pricing.rules.*` 与菜单专属 key。
+- Rule Code、Price Point ID、客户名称等 Mock 业务数据可以保留标准值；Scope、Adjustment 和 Status 的显示标签必须国际化。
+- 切换 `zh-CN` / `en-US` 后，规则列表、详情 Drawer、编辑表单和 Rule Calculation Steps 都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

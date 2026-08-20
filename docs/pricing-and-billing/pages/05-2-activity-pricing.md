@@ -501,6 +501,14 @@ Billing Calculation
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括活动状态、客户范围、机构范围、触发条件、优惠类型、规则说明、表格列、按钮、校验和确认提示，必须通过 i18n key 展示，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.pricing.activityPricing.*` 与菜单专属 key。
+- Product、Service、市场、币种和 Mock 客户名称可以保留标准业务值；Benefit Type、Condition Operator、Status 和 Billing Unit 的展示名称必须国际化。
+- 切换 `zh-CN` / `en-US` 后，活动列表、编辑 Drawer、条件 Builder、Pricing Impact 和生命周期操作都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

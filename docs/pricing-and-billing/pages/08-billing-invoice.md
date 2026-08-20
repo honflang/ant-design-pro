@@ -324,6 +324,14 @@ Traceable Correction
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括发票状态、格式、账单字段、表格列、按钮、校正操作、预览内容、错误和确认提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.billing.invoice.*` 与菜单专属 key。
+- Invoice Number、客户名称、金额、币种代码和 Mock 交易数据可以保留标准值；状态、格式和操作名称必须国际化。
+- 切换 `zh-CN` / `en-US` 后，发票列表、详情、预览、修正 Modal 和下载 / 发送操作都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

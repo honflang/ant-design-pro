@@ -607,6 +607,14 @@ Transparent Invoice Outcome
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括 Tab、表格列、表单字段、按钮、定价类型、适用维度、状态、校验、确认和空态，必须通过 `useIntl().formatMessage` 或 `<FormattedMessage />` 展示，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.pricing.priceBook.*` 与菜单专属 key。
+- Product、市场、币种和价格数值属于 Mock 业务数据，可以保留标准值；枚举显示名称必须国际化，不能直接展示枚举常量。
+- 切换 `zh-CN` / `en-US` 后，四个定价 Tab、筛选器、列表、详情 Drawer、编辑 Drawer 和 Simulation Preview 都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

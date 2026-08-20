@@ -50,6 +50,7 @@ export default {
   'menu.editor.mind': 'মাইন্ড এডিটর',
   'menu.editor.koni': 'কোনি সম্পাদক',
   'menu.pricing-billing-dashboard': 'Dashboard',
+  'menu.catalog': 'Product & Service Catalog',
   'menu.pricing': 'Pricing Configuration',
   'menu.billing': 'Billing Management',
   'menu.regional': 'Regional Configuration',

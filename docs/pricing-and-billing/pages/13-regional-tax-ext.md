@@ -547,6 +547,14 @@ Compliant Invoice
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括税种、税务处理、计算方式、状态、表格列、表单字段、按钮、预览、校验和提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.regional.tax.*` 与菜单专属 key。
+- Jurisdiction、税率、币种代码和 Mock 税务规则可以保留标准值；税种、处理方式和状态的展示名称必须国际化。
+- 切换 `zh-CN` / `en-US` 后，税务列表、编辑 Drawer、计算预览、详情和确认操作都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

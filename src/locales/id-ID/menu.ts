@@ -51,6 +51,7 @@ export default {
   'menu.editor.mind': 'Penyusun Mind',
   'menu.editor.koni': 'Penyusun Koni',
   'menu.pricing-billing-dashboard': 'Dashboard',
+  'menu.catalog': 'Product & Service Catalog',
   'menu.pricing': 'Pricing Configuration',
   'menu.billing': 'Billing Management',
   'menu.regional': 'Regional Configuration',

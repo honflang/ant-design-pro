@@ -488,6 +488,14 @@ Pending Approvals [优先级]
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括标题、菜单、按钮、字段、图表标题、状态、空态、错误提示和导航文本，必须通过 `useIntl().formatMessage` 或 `<FormattedMessage />` 展示，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.dashboard.*` 与菜单专属 key。
+- 市场名、币种代码、客户名称等 Mock 业务数据可以保留标准值；图表和列表的展示标签仍必须国际化。
+- 切换 `zh-CN` / `en-US` 后，Dashboard、统计卡片、图表、列表、Steps 和导航入口都必须显示对应语言。
+
 ## 15. 实现要求
 
 在开始修改代码之前：
@@ -517,7 +525,7 @@ Pending Approvals [优先级]
    - [ ] Platform Architecture Steps 流程展示
    - [ ] 所有导航链接正确指向对应模块
    - [ ] Mock 数据完整且合理
-   - [ ] 国际化 Key 完整添加（8个locale文件）
+   - [ ] 国际化 Key 完整添加（`zh-CN` 和 `en-US` 两个语言包）
    - [ ] TypeScript 编译无错误
    - [ ] Biome lint 通过
    - [ ] 页面能够正常运行并交互流畅

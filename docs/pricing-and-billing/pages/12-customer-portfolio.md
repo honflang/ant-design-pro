@@ -341,6 +341,14 @@ Controlled Approval & Execution
 
 ---
 
+## 国际化要求（仅中文 / English）
+
+- 本页面仅支持 `zh-CN` 和 `en-US` 两种语言，不新增或要求其他语言包。
+- 所有 UI 文案，包括客户字段、组合类型、状态、指标、表格列、筛选器、按钮、详情、校验和提示，必须使用 i18n key，不得硬编码中文或英文。
+- 新增文案统一维护在 `src/locales/zh-CN/pages.ts`、`src/locales/en-US/pages.ts` 和对应的 `menu.ts` 中，使用 `pages.customer.portfolio.*` 与菜单专属 key。
+- 客户名称、组合编号、市场和 Mock 统计数据可以保留标准值；状态、类型和指标标签必须国际化。
+- 切换 `zh-CN` / `en-US` 后，组合列表、详情 Drawer、筛选器和操作确认都必须显示对应语言。
+
 ## 十五、实现要求
 
 在开始修改代码之前：

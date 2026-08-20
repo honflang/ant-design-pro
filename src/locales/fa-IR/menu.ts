@@ -50,6 +50,7 @@ export default {
   'menu.editor.mind': 'ویرایشگر ذهن',
   'menu.editor.koni': 'ویرایشگر Koni',
   'menu.pricing-billing-dashboard': 'Dashboard',
+  'menu.catalog': 'Product & Service Catalog',
   'menu.pricing': 'Pricing Configuration',
   'menu.billing': 'Billing Management',
   'menu.regional': 'Regional Configuration',
