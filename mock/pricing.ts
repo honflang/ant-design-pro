@@ -17,8 +17,9 @@ export interface PricePointTier {
 export interface PricePoint {
   id: string;
   product: string;
-  serviceGroup: string;
-  service: string;
+  serviceGroup?: string;
+  service?: string;
+  feeItem?: string;
   dimension?: PriceDimension;
   market?: string;
   segment?: string;
@@ -267,6 +268,39 @@ let pricePoints: PricePoint[] = [
 
 pricePoints = [
   {
+    id: 'pp-base-cm-product-001',
+    product: 'Cash Management',
+    dimension: 'BASE',
+    priceType: 'FLAT',
+    currency: 'USD',
+    flatAmount: 60,
+    flatUnit: 'PER_MONTH',
+    effectiveFrom: '2025-01-01',
+    effectiveTo: '2027-12-31',
+    category: 'STANDARD',
+    status: 'ACTIVE',
+    description: 'Product-level default price for Cash Management.',
+    updatedBy: 'global.pricing',
+    updatedAt: nowIso(),
+  },
+  {
+    id: 'pp-base-tf-documentary-001',
+    product: 'Trade Finance',
+    serviceGroup: 'Documentary Trade',
+    dimension: 'BASE',
+    priceType: 'FLAT',
+    currency: 'USD',
+    flatAmount: 75,
+    flatUnit: 'PER_TRANSACTION',
+    effectiveFrom: '2025-01-01',
+    effectiveTo: '2027-12-31',
+    category: 'STANDARD',
+    status: 'ACTIVE',
+    description: 'Service-group-level default price for Documentary Trade.',
+    updatedBy: 'global.pricing',
+    updatedAt: nowIso(),
+  },
+  {
     id: 'pp-base-cm-001',
     product: 'Cash Management',
     serviceGroup: 'Account Services',
@@ -392,8 +426,9 @@ function addPricePoint(req: Request, res: Response) {
     dimension: body.dimension ?? (body.clientGroup ? 'GROUP' : body.segment && !body.market ? 'SEGMENT' : body.market ? 'REGION' : 'BASE'),
     market: body.market,
     product: body.product ?? 'Cash Management',
-    serviceGroup: body.serviceGroup ?? 'Account Services',
-    service: body.service ?? 'Account Maintenance',
+    serviceGroup: body.serviceGroup,
+    service: body.service,
+    feeItem: body.feeItem,
     segment: body.segment,
     priceType: body.priceType ?? 'FLAT',
     currency: body.currency ?? 'SGD',

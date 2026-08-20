@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import type { PriceType } from './pricing';
 
 export type ActivityStatus = 'DRAFT' | 'PUBLISHED' | 'INACTIVE';
 export type CustomerScopeType = 'BANK_WIDE' | 'SEGMENT' | 'GROUP' | 'CUSTOMER';
@@ -24,6 +25,7 @@ export interface ActivityPricingRule {
   serviceGroup?: string;
   service?: string;
   feeItem?: string;
+  referencePriceType?: PriceType;
   benefitType: BenefitType;
   benefitValue?: number;
   currency?: string;

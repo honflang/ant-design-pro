@@ -68,6 +68,7 @@ export default {
   'menu.pricing-billing.customer': '客户管理',
   'menu.pricing-billing.customer.360': '客户 360',
   'menu.pricing-billing.customer.portfolio': '客户组合',
+  'menu.pricing-billing.customer.deal-pricing-request': '个性化定价申请',
   'menu.pricing-billing.reports': '数据分析',
   'menu.pricing-billing.reports.analytics': '分析报表',
   'menu.pricing-billing.regional': '区域配置',

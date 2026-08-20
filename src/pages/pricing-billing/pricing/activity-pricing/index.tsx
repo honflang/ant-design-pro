@@ -42,7 +42,7 @@ import {
   Typography,
 } from 'antd';
 import dayjs from 'dayjs';
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import type {
   ActivityCondition,
   ActivityPricingRule,
@@ -55,6 +55,7 @@ import type {
   InstitutionScopeType,
   PricingActivity,
 } from '../../../../../mock/pricingActivity';
+import type { PricePoint, PriceType } from '../../../../../mock/pricing';
 
 const { Text } = Typography;
 
@@ -106,6 +107,18 @@ const BENEFIT_TYPE_OPTIONS: BenefitType[] = [
   'WAIVER',
   'ECR',
 ];
+const BENEFIT_TYPES_BY_PRICE_TYPE: Record<PriceType, BenefitType[]> = {
+  FLAT: ['FIXED_AMOUNT', 'PERCENTAGE_DISCOUNT', 'WAIVER'],
+  VOLUME: ['FIXED_AMOUNT', 'PERCENTAGE_DISCOUNT', 'WAIVER'],
+  TIERED: ['RATE_DISCOUNT', 'PERCENTAGE_DISCOUNT', 'WAIVER'],
+  ECR: ['ECR'],
+};
+const DEFAULT_BENEFIT_TYPE_BY_PRICE_TYPE: Record<PriceType, BenefitType> = {
+  FLAT: 'FIXED_AMOUNT',
+  VOLUME: 'FIXED_AMOUNT',
+  TIERED: 'RATE_DISCOUNT',
+  ECR: 'ECR',
+};
 const STATUS_COLORS: Record<ActivityStatus, string> = {
   DRAFT: 'default',
   PUBLISHED: 'success',
@@ -212,6 +225,34 @@ const emptyGroup = (): { operator: 'AND'; conditions: Partial<ActivityCondition>
   conditions: [emptyCondition()],
 });
 
+const getPricePointDepth = (pricePoint: PricePoint) =>
+  1 + Number(Boolean(pricePoint.serviceGroup)) + Number(Boolean(pricePoint.service)) + Number(Boolean(pricePoint.feeItem));
+
+const findReferencePrice = (rule: Partial<ActivityPricingRule>, pricePoints: PricePoint[]) => {
+  const today = dayjs().format('YYYY-MM-DD');
+  const matches = pricePoints
+    .filter(
+      (pricePoint) =>
+        pricePoint.status === 'ACTIVE' &&
+        pricePoint.product === rule.product &&
+        (!pricePoint.serviceGroup || pricePoint.serviceGroup === rule.serviceGroup) &&
+        (!pricePoint.service || pricePoint.service === rule.service) &&
+        (!pricePoint.feeItem || pricePoint.feeItem === rule.feeItem) &&
+        pricePoint.effectiveFrom <= today &&
+        (!pricePoint.effectiveTo || pricePoint.effectiveTo >= today),
+    )
+    .sort((left, right) => getPricePointDepth(right) - getPricePointDepth(left));
+  const pricePoint = matches[0];
+  if (!pricePoint) return undefined;
+
+  return {
+    currency: pricePoint.currency,
+    unit: pricePoint.flatUnit,
+    standardRate: pricePoint.flatAmount ?? pricePoint.tiers?.at(-1)?.rate ?? pricePoint.ecrRate,
+    referencePriceType: pricePoint.priceType,
+  };
+};
+
 const ActivityForm: React.FC<{
   open: boolean;
   editRecord?: PricingActivity;
@@ -221,10 +262,37 @@ const ActivityForm: React.FC<{
   const intl = useIntl();
   const { message } = App.useApp();
   const [form] = ProForm.useForm();
+  const [pricePoints, setPricePoints] = useState<PricePoint[]>([]);
   const t = (id: string, values?: Record<string, string | number>) => intl.formatMessage({ id }, values);
 
   const customerScope: CustomerScopeType = ProForm.useWatch('customerScope', form) ?? 'BANK_WIDE';
   const institutionScope: InstitutionScopeType = ProForm.useWatch('institutionScope', form) ?? 'BANK_WIDE';
+
+  useEffect(() => {
+    if (!open) return;
+    request<{ success: boolean; data: PricePoint[] }>('/api/pricing/price-points', { method: 'GET' })
+      .then((res) => setPricePoints(res.data ?? []))
+      .catch(() => setPricePoints([]));
+  }, [open]);
+
+  const updateRuleScope = (ruleIndex: number, scope: Partial<ActivityPricingRule>) => {
+    const referencePrice = findReferencePrice(scope, pricePoints);
+    const rules = [...(form.getFieldValue('rules') ?? [])];
+    rules[ruleIndex] = {
+      ...rules[ruleIndex],
+      ...scope,
+      currency: referencePrice?.currency,
+      unit: referencePrice?.unit,
+      standardRate: referencePrice?.standardRate,
+      referencePriceType: referencePrice?.referencePriceType,
+      benefitType: referencePrice
+        ? DEFAULT_BENEFIT_TYPE_BY_PRICE_TYPE[referencePrice.referencePriceType]
+        : rules[ruleIndex]?.benefitType,
+    };
+    form.setFieldsValue({
+      rules,
+    });
+  };
 
   const handleFinish = async (values: Record<string, any>) => {
     try {
@@ -539,7 +607,17 @@ const ActivityForm: React.FC<{
                     <Row gutter={12}>
                       <Col span={8}>
                         <Form.Item name={[ruleField.name, 'product']} label={t('pages.pricing.activityPricing.form.ruleProduct')} rules={[{ required: true }]}>
-                          <Select options={PRODUCT_OPTIONS.map((item) => ({ label: item, value: item }))} />
+                          <Select
+                            options={PRODUCT_OPTIONS.map((item) => ({ label: item, value: item }))}
+                            onChange={(product) =>
+                              updateRuleScope(ruleField.name, {
+                                product,
+                                serviceGroup: undefined,
+                                service: undefined,
+                                feeItem: undefined,
+                              })
+                            }
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
@@ -549,7 +627,19 @@ const ActivityForm: React.FC<{
                             const options = product ? Object.keys(SERVICE_CATALOG[product] ?? {}) : [];
                             return (
                               <Form.Item name={[ruleField.name, 'serviceGroup']} label={t('pages.pricing.activityPricing.form.ruleServiceGroup')}>
-                                <Select allowClear disabled={!product} options={options.map((item) => ({ label: item, value: item }))} />
+                                <Select
+                                  allowClear
+                                  disabled={!product}
+                                  options={options.map((item) => ({ label: item, value: item }))}
+                                  onChange={(serviceGroup) =>
+                                    updateRuleScope(ruleField.name, {
+                                      product,
+                                      serviceGroup,
+                                      service: undefined,
+                                      feeItem: undefined,
+                                    })
+                                  }
+                                />
                               </Form.Item>
                             );
                           }}
@@ -563,7 +653,19 @@ const ActivityForm: React.FC<{
                             const options = product && serviceGroup ? SERVICE_CATALOG[product]?.[serviceGroup] ?? [] : [];
                             return (
                               <Form.Item name={[ruleField.name, 'service']} label={t('pages.pricing.activityPricing.form.ruleService')}>
-                                <Select allowClear disabled={!serviceGroup} options={options.map((item) => ({ label: item, value: item }))} />
+                                <Select
+                                  allowClear
+                                  disabled={!serviceGroup}
+                                  options={options.map((item) => ({ label: item, value: item }))}
+                                  onChange={(service) =>
+                                    updateRuleScope(ruleField.name, {
+                                      product,
+                                      serviceGroup,
+                                      service,
+                                      feeItem: undefined,
+                                    })
+                                  }
+                                />
                               </Form.Item>
                             );
                           }}
@@ -571,12 +673,33 @@ const ActivityForm: React.FC<{
                       </Col>
                       <Col span={8}>
                         <Form.Item name={[ruleField.name, 'feeItem']} label={t('pages.pricing.activityPricing.form.ruleFeeItem')}>
-                          <Input />
+                          <Input
+                            onChange={(event) => {
+                              const values = form.getFieldValue(['rules', ruleField.name]);
+                              updateRuleScope(ruleField.name, { ...values, feeItem: event.target.value });
+                            }}
+                          />
                         </Form.Item>
                       </Col>
                       <Col span={8}>
-                        <Form.Item name={[ruleField.name, 'benefitType']} label={t('pages.pricing.activityPricing.form.benefitType')} rules={[{ required: true }]}>
-                          <Select options={BENEFIT_TYPE_OPTIONS.map((item) => ({ label: item, value: item }))} />
+                        <Form.Item shouldUpdate noStyle>
+                          {({ getFieldValue }) => {
+                            const rule = getFieldValue(['rules', ruleField.name]) as Partial<ActivityPricingRule>;
+                            const referencePriceType =
+                              rule.referencePriceType ?? findReferencePrice(rule, pricePoints)?.referencePriceType;
+                            const benefitTypeOptions = referencePriceType
+                              ? BENEFIT_TYPES_BY_PRICE_TYPE[referencePriceType]
+                              : BENEFIT_TYPE_OPTIONS;
+                            return (
+                              <Form.Item
+                                name={[ruleField.name, 'benefitType']}
+                                label={t('pages.pricing.activityPricing.form.benefitType')}
+                                rules={[{ required: true }]}
+                              >
+                                <Select options={benefitTypeOptions.map((item) => ({ label: item, value: item }))} />
+                              </Form.Item>
+                            );
+                          }}
                         </Form.Item>
                       </Col>
                       <Col span={8}>
@@ -604,7 +727,7 @@ const ActivityForm: React.FC<{
                                 </Col>
                                 <Col span={8}>
                                   <Form.Item name={[ruleField.name, 'standardRate']} label={t('pages.pricing.activityPricing.form.standardRate')}>
-                                    <InputNumber min={0} style={{ width: '100%' }} />
+                                    <InputNumber min={0} disabled style={{ width: '100%' }} />
                                   </Form.Item>
                                 </Col>
                               </>
@@ -618,7 +741,7 @@ const ActivityForm: React.FC<{
                                 </Col>
                                 <Col span={8}>
                                   <Form.Item name={[ruleField.name, 'standardRate']} label={t('pages.pricing.activityPricing.form.standardRate')}>
-                                    <InputNumber min={0} style={{ width: '100%' }} />
+                                    <InputNumber min={0} disabled style={{ width: '100%' }} />
                                   </Form.Item>
                                 </Col>
                                 <Col span={8}>
@@ -632,7 +755,7 @@ const ActivityForm: React.FC<{
                               <>
                                 <Col span={12}>
                                   <Form.Item name={[ruleField.name, 'standardRate']} label={t('pages.pricing.activityPricing.form.standardRate')} rules={[{ required: true }]}>
-                                    <InputNumber min={0} style={{ width: '100%' }} addonAfter="%" />
+                                    <InputNumber min={0} disabled style={{ width: '100%' }} addonAfter="%" />
                                   </Form.Item>
                                 </Col>
                                 <Col span={12}>
@@ -645,7 +768,7 @@ const ActivityForm: React.FC<{
                             {benefitType === 'WAIVER' && (
                               <Col span={8}>
                                 <Form.Item name={[ruleField.name, 'standardRate']} label={t('pages.pricing.activityPricing.form.standardRate')}>
-                                  <InputNumber min={0} style={{ width: '100%' }} />
+                                  <InputNumber min={0} disabled style={{ width: '100%' }} />
                                 </Form.Item>
                               </Col>
                             )}

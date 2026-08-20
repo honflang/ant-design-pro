@@ -196,6 +196,12 @@ export default [
             path: '/pricing-billing/customer/portfolio',
             component: './pricing-billing/customer/portfolio',
           },
+          {
+            name: 'deal-pricing-request',
+            icon: 'fileAdd',
+            path: '/pricing-billing/customer/deal-pricing-request',
+            component: './pricing-billing/customer/deal-pricing-request',
+          },
         ],
       },
       {

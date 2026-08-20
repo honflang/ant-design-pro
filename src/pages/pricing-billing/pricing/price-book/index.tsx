@@ -98,34 +98,39 @@ type PriceBookTreeNode = Partial<PricePoint> & {
 };
 
 const toPriceBookTree = (records: PricePoint[]): PriceBookTreeNode[] => {
-  const products = new Map<string, Map<string, Map<string, PricePoint[]>>>();
+  const products = new Map<string, PricePoint[]>();
+  records.forEach((record) => products.set(record.product, [...(products.get(record.product) ?? []), record]));
 
-  records.forEach((record) => {
-    const serviceGroups = products.get(record.product) ?? new Map<string, Map<string, PricePoint[]>>();
-    const services = serviceGroups.get(record.serviceGroup) ?? new Map<string, PricePoint[]>();
-    services.set(record.service, [...(services.get(record.service) ?? []), record]);
-    serviceGroups.set(record.serviceGroup, services);
-    products.set(record.product, serviceGroups);
-  });
+  return Array.from(products, ([product, productPricePoints]) => {
+    const serviceGroups = new Map<string, PricePoint[]>();
+    productPricePoints
+      .filter((pricePoint) => pricePoint.serviceGroup)
+      .forEach((pricePoint) => {
+        const serviceGroup = pricePoint.serviceGroup as string;
+        serviceGroups.set(serviceGroup, [...(serviceGroups.get(serviceGroup) ?? []), pricePoint]);
+      });
 
-  return Array.from(products, ([product, serviceGroups]) => ({
-    id: `product-${product}`,
-    nodeType: 'PRODUCT',
-    product,
-    children: Array.from(serviceGroups, ([serviceGroup, services]) => ({
-      id: `service-group-${product}-${serviceGroup}`,
-      nodeType: 'SERVICE_GROUP',
+    return {
+      id: `product-${product}`,
+      nodeType: 'PRODUCT',
       product,
-      serviceGroup,
-      children: Array.from(services, ([service, pricePoints]) =>
-        pricePoints.map((pricePoint) => ({
-          ...pricePoint,
-          service,
-          nodeType: 'PRICE_POINT' as const,
+      children: [
+        ...productPricePoints
+          .filter((pricePoint) => !pricePoint.serviceGroup)
+          .map((pricePoint) => ({ ...pricePoint, nodeType: 'PRICE_POINT' as const })),
+        ...Array.from(serviceGroups, ([serviceGroup, serviceGroupPricePoints]) => ({
+          id: `service-group-${product}-${serviceGroup}`,
+          nodeType: 'SERVICE_GROUP' as const,
+          product,
+          serviceGroup,
+          children: serviceGroupPricePoints.map((pricePoint) => ({
+            ...pricePoint,
+            nodeType: 'PRICE_POINT' as const,
+          })),
         })),
-      ).flat(),
-    })),
-  }));
+      ],
+    };
+  });
 };
 
 const DIMENSION_TABS: { key: PriceDimension; labelId: string }[] = [
@@ -214,7 +219,7 @@ const PriceBookForm: React.FC<{
   editRecord?: PricePoint;
   dimension: PriceDimension;
   target?: string;
-  initialServiceScope?: Pick<PricePoint, 'product' | 'serviceGroup' | 'service'>;
+  initialServiceScope?: Partial<Pick<PricePoint, 'product' | 'serviceGroup' | 'service' | 'feeItem'>>;
   onClose: () => void;
   onSuccess: () => void;
 }> = ({ open, editRecord, dimension, target, initialServiceScope, onClose, onSuccess }) => {
@@ -323,9 +328,8 @@ const PriceBookForm: React.FC<{
                 label={t('pages.pricing.priceBook.form.serviceGroup')}
                 options={serviceGroupOptions.map((item) => ({ label: item, value: item }))}
                 disabled={!selectedProduct || Boolean(editRecord)}
-                rules={[{ required: true }]}
                 fieldProps={{
-                  onChange: () => form.setFieldsValue({ service: undefined }),
+                  onChange: () => form.setFieldsValue({ service: undefined, feeItem: undefined }),
                 }}
               />
             </Col>
@@ -335,7 +339,13 @@ const PriceBookForm: React.FC<{
                 label={t('pages.pricing.priceBook.form.service')}
                 options={serviceOptions.map((item) => ({ label: item, value: item }))}
                 disabled={!selectedServiceGroup || Boolean(editRecord)}
-                rules={[{ required: true }]}
+              />
+            </Col>
+            <Col span={12}>
+              <ProFormText
+                name="feeItem"
+                label={t('pages.pricing.priceBook.form.feeItem')}
+                disabled={!selectedServiceGroup || Boolean(editRecord)}
               />
             </Col>
             <Col span={12}>
@@ -663,7 +673,7 @@ const PriceBookPage: React.FC = () => {
     GROUP: undefined,
   });
   const [serviceScope, setServiceScope] = useState<
-    Partial<Pick<PricePoint, 'product' | 'serviceGroup' | 'service'>>
+    Partial<Pick<PricePoint, 'product' | 'serviceGroup' | 'service' | 'feeItem'>>
   >({});
 
   const activeTarget = activeDimension === 'BASE' ? undefined : targets[activeDimension];
@@ -675,8 +685,6 @@ const PriceBookPage: React.FC = () => {
     : [];
   const canManageCurrentScope = Boolean(
     serviceScope.product &&
-      serviceScope.serviceGroup &&
-      serviceScope.service &&
       (activeDimension === 'BASE' || activeTarget),
   );
   const isPricePointNode = (record: PricePoint) =>
@@ -737,7 +745,7 @@ const PriceBookPage: React.FC = () => {
         !isPricePointNode(r) && r.serviceGroup ? <Text strong>{r.serviceGroup}</Text> : !isPricePointNode(r) ? <Space size={4}>
           <BankOutlined style={{ color: '#1677ff', fontSize: 12 }} />
           <Text strong>{r.product}</Text>
-        </Space> : <Text>{r.service}</Text>
+        </Space> : <Text>{[r.serviceGroup, r.service, r.feeItem].filter(Boolean).join(' / ') || r.product}</Text>
       ),
       filters: PRODUCT_OPTIONS.map((item) => ({ text: item, value: item })),
       onFilter: (value, record) => record.product === value,
@@ -1065,7 +1073,7 @@ const PriceBookPage: React.FC = () => {
         editRecord={editRecord}
         dimension={activeDimension}
         target={activeTarget}
-        initialServiceScope={serviceScope as Pick<PricePoint, 'product' | 'serviceGroup' | 'service'>}
+        initialServiceScope={serviceScope}
         onClose={() => setFormOpen(false)}
         onSuccess={() => actionRef.current?.reload()}
       />

@@ -68,6 +68,7 @@ export default {
   'menu.pricing-billing.customer': 'Customer Management',
   'menu.pricing-billing.customer.360': 'Customer 360',
   'menu.pricing-billing.customer.portfolio': 'Customer Portfolio',
+  'menu.pricing-billing.customer.deal-pricing-request': 'Deal Pricing Request',
   'menu.pricing-billing.reports': 'Reports',
   'menu.pricing-billing.reports.analytics': 'Analytics & Reporting',
   'menu.pricing-billing.regional': 'Regional Configuration',

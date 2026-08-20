@@ -224,6 +224,16 @@ Benefit Type：Fixed Amount Discount / Percentage Discount / Rate Discount / Ful
 Benefit Value（随 Benefit Type 联动显示）
 ```
 
+标准价格不是活动规则的手工输入项。用户选择产品范围后，页面从当前有效且为 `ACTIVE` 的 Price Book 价格中自动带出币种、计费单位和标准价格。匹配顺序为收费项级、服务级、服务组级、产品级；未命中时标准价格保持为空，需先在 Price Book 对应层级维护有效价格。活动规则中的标准价格字段只读，优惠后价格仍由活动优惠配置计算。
+
+Price Book 的定价类型决定活动规则可用的优惠类型，并在选择产品范围时自动带出默认值：
+
+| Price Book Price Type | 默认优惠类型 | 可选优惠类型 |
+|---|---|---|
+| `FLAT` / `VOLUME` | `FIXED_AMOUNT` | `FIXED_AMOUNT`、`PERCENTAGE_DISCOUNT`、`WAIVER` |
+| `TIERED` | `RATE_DISCOUNT` | `RATE_DISCOUNT`、`PERCENTAGE_DISCOUNT`、`WAIVER` |
+| `ECR` | `ECR` | `ECR` |
+
 不同 Benefit Type 的字段联动：
 
 | Benefit Type | 需要填写的字段 |

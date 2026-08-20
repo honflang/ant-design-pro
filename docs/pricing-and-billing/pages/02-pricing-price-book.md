@@ -260,6 +260,8 @@ Category
 
 新增或编辑时，`Applicability Dimension` 由当前 Tab 自动带入并锁定，不建议在 Drawer 中再次选择。Base Pricing Tab 不显示目标字段；Region Pricing、Segment Pricing 和 Group Pricing Tab 分别只显示对应的目标选择字段，避免产生含义冲突的组合。Region / Country 的值使用国家，例如 Singapore 或 Japan。
 
+产品作用范围支持四个层级：`Product`、`Service Group`、`Service`、`Fee Item`。新增 Price Point 时只要求选择 Product，后续层级按需选择或填写，因此可分别维护产品级默认价、服务组级默认价、服务级价格和收费项级价格。价格解析时，更具体的产品层级覆盖更上层的同维度价格。
+
 ### 2. Pricing Definition
 
 ```text
