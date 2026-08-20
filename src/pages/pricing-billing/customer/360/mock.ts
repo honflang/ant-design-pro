@@ -56,7 +56,16 @@ const makeDepositLoanTrend = (
     };
   });
 
-const makeBilling = (customerId: string, currency: string): BillingProfile => {
+const billingTaxConfig: Record<string, { rate: number; label: string }> = {
+  China: { rate: 0.06, label: 'VAT (6%)' },
+  'Hong Kong': { rate: 0, label: 'Hong Kong Tax (0%)' },
+  Singapore: { rate: 0.09, label: 'GST (9%)' },
+  Japan: { rate: 0.1, label: 'Consumption Tax (10%)' },
+};
+const defaultBillingTax = { rate: 0.06, label: 'Tax (6%)' };
+
+const makeBilling = (customerId: string, currency: string, registrationCountry: string): BillingProfile => {
+  const { rate: taxRate, label: taxLabel } = billingTaxConfig[registrationCountry] ?? defaultBillingTax;
   const months = [
     ['2026-08-01', '2026-08-15', '2026-07-01', '2026-07-31', 420_000, 120_000, 180_000, 120_000, 'Issued'],
     ['2026-07-01', '2026-07-15', '2026-06-01', '2026-06-30', 390_000, 110_000, 170_000, 110_000, 'Paid'],
@@ -73,25 +82,30 @@ const makeBilling = (customerId: string, currency: string): BillingProfile => {
   ] as const;
 
   return {
-    statements: months.map(([billDate, paymentDueDate, servicePeriodStart, servicePeriodEnd, totalAmountDue, cashManagementFee, tradeFinanceFee, globalMarketsTransactionFee, status], index) => ({
-      id: `INV-${customerId}-${index + 1}`,
-      billDate,
-      paymentDueDate,
-      servicePeriodStart,
-      servicePeriodEnd,
-      totalAmountDue,
-      currency,
-      cashManagementFee,
-      tradeFinanceFee,
-      globalMarketsTransactionFee,
-      remarks: 'Monthly service fee',
-      status,
-      details: [
-        { category: 'Cash Management Fee', items: [{ name: 'Account Maintenance', amount: Math.round(cashManagementFee * 0.375) }, { name: 'Wire Transfer (outbound)', amount: Math.round(cashManagementFee * 0.317) }, { name: 'Collection Services', amount: cashManagementFee - Math.round(cashManagementFee * 0.375) - Math.round(cashManagementFee * 0.317) }] },
-        { category: 'Trade Finance Fee', items: [{ name: 'Letter of Credit', amount: Math.round(tradeFinanceFee * 0.667) }, { name: 'Trade Loan', amount: tradeFinanceFee - Math.round(tradeFinanceFee * 0.667) }] },
-        { category: 'Global Markets Transaction Fee', items: [{ name: 'FX Spot', amount: Math.round(globalMarketsTransactionFee * 0.708) }, { name: 'FX Forward', amount: globalMarketsTransactionFee - Math.round(globalMarketsTransactionFee * 0.708) }] },
-      ],
-    })),
+    statements: months.map(([billDate, paymentDueDate, servicePeriodStart, servicePeriodEnd, subtotal, cashManagementFee, tradeFinanceFee, globalMarketsTransactionFee, status], index) => {
+      const taxAmount = Math.round(subtotal * taxRate);
+      return {
+        id: `INV-${customerId}-${index + 1}`,
+        billDate,
+        paymentDueDate,
+        servicePeriodStart,
+        servicePeriodEnd,
+        totalAmountDue: subtotal + taxAmount,
+        currency,
+        cashManagementFee,
+        tradeFinanceFee,
+        globalMarketsTransactionFee,
+        taxAmount,
+        taxLabel,
+        remarks: 'Monthly service fee',
+        status,
+        details: [
+          { category: 'Cash Management Fee', items: [{ name: 'Account Maintenance', amount: Math.round(cashManagementFee * 0.375) }, { name: 'Wire Transfer (outbound)', amount: Math.round(cashManagementFee * 0.317) }, { name: 'Collection Services', amount: cashManagementFee - Math.round(cashManagementFee * 0.375) - Math.round(cashManagementFee * 0.317) }] },
+          { category: 'Trade Finance Fee', items: [{ name: 'Letter of Credit', amount: Math.round(tradeFinanceFee * 0.667) }, { name: 'Trade Loan', amount: tradeFinanceFee - Math.round(tradeFinanceFee * 0.667) }] },
+          { category: 'Global Markets Transaction Fee', items: [{ name: 'FX Spot', amount: Math.round(globalMarketsTransactionFee * 0.708) }, { name: 'FX Forward', amount: globalMarketsTransactionFee - Math.round(globalMarketsTransactionFee * 0.708) }] },
+        ],
+      };
+    }),
   };
 };
 
@@ -207,7 +221,7 @@ const makeCustomer = (partial: Partial<Customer360> & { id: string; customerName
       ...partial.banking,
     },
 
-    billing: makeBilling(partial.id, currency),
+    billing: makeBilling(partial.id, currency, partial.identity?.registrationCountry ?? 'China'),
 
     value: {
       relationshipHealth: 92,
@@ -632,6 +646,128 @@ export const customers: Customer360[] = [
       customizedPricingEnabled: false,
       pricingPackage: 'Standard Corporate Package',
       discount: '4.5%',
+      validUntil: '2026-12-31',
+      historicalNegotiation: [],
+    },
+  }),
+  makeCustomer({
+    id: 'CUST-000512',
+    customerName: 'Golden Harbour Trading Ltd.',
+    customerType: 'Corporate',
+    status: 'ACTIVE',
+    segment: 'Corporate',
+    operatingMarkets: ['Hong Kong', 'China'],
+    relationshipManager: 'Chan Tai Man',
+    customerSince: 2019,
+    totalRevenue: 1_260_000,
+    totalRevenueCurrency: 'HKD',
+    totalRevenueYoY: '+5.4% YoY',
+    riskAdjustedProfit: 560_000,
+    riskAdjustedProfitCurrency: 'HKD',
+    annualTransactions: 240_000,
+    identity: {
+      customerId: 'CUST-000512',
+      customerName: 'Golden Harbour Trading Ltd.',
+      businessRegistrationNumber: 'BR-HK-2026-000512',
+      registrationCountry: 'Hong Kong',
+      registrationPlace: 'Hong Kong',
+      operatingAddress: '8 Queen\'s Road Central, Hong Kong',
+      industry: 'Trading',
+      industryCode: 'G46',
+      foreignOwnership: '40%',
+    },
+    compliance: {
+      amlRisk: 'LOW',
+      blacklist: 'CLEAR',
+      crossBorderTrading: 'ENABLED',
+      fxQualification: 'VALID',
+      fxQualificationExpiry: '2027-09-30',
+    },
+    value: {
+      relationshipHealth: 80,
+      revenueGrowth: '+5.4%',
+      productPenetration: 48,
+      customerValueTier: 'Growth',
+      riskLevel: 'LOW',
+      annualRevenue: 620_000_000,
+      annualRevenueCurrency: 'HKD',
+      bankingRelationshipYears: 7,
+      operatingCountries: 2,
+      productsHeld: 4,
+      recency: '2 days ago',
+      frequency: '240K transactions / year',
+      monetary: 'HKD 560K contribution',
+      rfmRating: 3,
+      rfmLabel: 'Growth Customer',
+      revenueContribution: makeContribution(1_260_000 / 4_820_000),
+    },
+    banking: {
+      depositBalance: 96_000_000,
+      depositBalanceCurrency: 'HKD',
+      loanBalance: 58_000_000,
+      loanBalanceCurrency: 'HKD',
+      loanUtilization: 60,
+      averageDepositBalance: 90_000_000,
+      ftpBenchmark: 'HIBOR + 40 bps',
+      averageDepositRate: '2.10%',
+      averageLendingRate: '4.05%',
+      depositLoanTrend: makeDepositLoanTrend(96_000_000, 58_000_000),
+      settlementTransactions: 240_000,
+      intermediaryServices: 4,
+      annualFees: 210_000,
+      annualFeesCurrency: 'HKD',
+      feeDiscount: '5.0%',
+      feeHistory: [
+        { year: '2024', amount: 150_000, currency: 'HKD' },
+        { year: '2025', amount: 180_000, currency: 'HKD' },
+        { year: '2026 YTD', amount: 210_000, currency: 'HKD' },
+      ],
+      crossBorderAnnualTransactions: 68_000,
+      crossBorderTotalValue: 520_000_000,
+      crossBorderValueCurrency: 'HKD',
+      preferredChannel: 'SWIFT',
+      peakTransactionPeriod: '10:00 - 13:00',
+      crossBorderRoutes: [
+        { from: 'Hong Kong', to: 'China' },
+        { from: 'Hong Kong', to: 'Singapore' },
+      ],
+      grossRevenue: 1_260_000,
+      operatingCost: 360_000,
+      creditCost: 120_000,
+      economicCapitalCost: 100_000,
+      riskAdjustedContribution: 560_000,
+      contributionCurrency: 'HKD',
+    },
+    risk: {
+      creditRating: 'A-',
+      probabilityOfDefault: '0.35%',
+      riskMitigation: 'Guarantee',
+      economicCapital: 5_200_000,
+      economicCapitalCurrency: 'HKD',
+      riskAdjustedReturn: '10.6%',
+      riskAdjustedCustomerValue: 460_000,
+      riskAdjustedCustomerValueCurrency: 'HKD',
+    },
+    relationships: {
+      beneficialOwner: 'Chan Family',
+      ownerRole: 'Actual Owner',
+      parentCompany: 'Golden Harbour Trading Ltd.',
+      subsidiaries: [
+        { name: 'Golden Harbour HK', location: 'Hong Kong', exposure: 42_000_000 },
+        { name: 'Golden Harbour Shenzhen', location: 'China', exposure: 26_000_000 },
+      ],
+      groupCreditExposure: 120_000_000,
+      groupCreditLimit: 160_000_000,
+      groupCreditCurrency: 'HKD',
+    },
+    pricing: {
+      interestRateSensitivity: 'Medium',
+      feeSensitivity: 'Medium',
+      priceElasticity: 'Medium',
+      acceptableFeeThreshold: '≤ 14 bps',
+      customizedPricingEnabled: false,
+      pricingPackage: 'Corporate Package',
+      discount: '5.0%',
       validUntil: '2026-12-31',
       historicalNegotiation: [],
     },

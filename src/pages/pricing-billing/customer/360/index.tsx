@@ -115,6 +115,7 @@ const createMockInvoicePdf = (
     ['Trade Finance Fee', statement.tradeFinanceFee],
     ['Global Markets Transaction Fee', statement.globalMarketsTransactionFee],
     ['Other Fees', statement.otherFees ?? 0],
+    [statement.taxLabel, statement.taxAmount],
   ];
   feeRows.forEach(([label, value]) => {
     text(48, y, label, 10);
@@ -1263,6 +1264,7 @@ const Customer360Page: React.FC = () => {
               { title: t('pages.customer.360.billingModal.cashManagementFee', 'Cash Management Fee'), dataIndex: 'cashManagementFee', render: (_, row) => money(row.cashManagementFee, row.currency) },
               { title: t('pages.customer.360.billingModal.tradeFinanceFee', 'Trade Finance Fee'), dataIndex: 'tradeFinanceFee', render: (_, row) => money(row.tradeFinanceFee, row.currency) },
               { title: t('pages.customer.360.billingModal.globalMarketsFee', 'Global Markets Transaction Fee'), dataIndex: 'globalMarketsTransactionFee', render: (_, row) => money(row.globalMarketsTransactionFee, row.currency) },
+              { title: t('pages.customer.360.billingModal.taxFee', 'Tax'), dataIndex: 'taxAmount', render: (_, row) => `${money(row.taxAmount, row.currency)} (${row.taxLabel})` },
               { title: t('pages.customer.360.billingModal.remarks', 'Remarks'), dataIndex: 'remarks' },
               { title: t('pages.customer.360.billingModal.status', 'Status'), dataIndex: 'status', render: (_, row) => <Tag color={row.status === 'Paid' ? 'success' : row.status === 'Overdue' ? 'error' : 'processing'}>{enumLabel(row.status.toLowerCase())}</Tag> },
               {

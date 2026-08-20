@@ -99,6 +99,8 @@ export interface BillingStatement {
   tradeFinanceFee: number;
   globalMarketsTransactionFee: number;
   otherFees?: number;
+  taxAmount: number;
+  taxLabel: string;
   remarks: string;
   status: BillingStatementStatus;
   details: BillingStatementDetail[];

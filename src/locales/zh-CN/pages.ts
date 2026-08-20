@@ -1293,6 +1293,7 @@ export default {
   'pages.customer.360.billingModal.tradeFinanceFee': '贸易融资费',
   'pages.customer.360.billingModal.globalMarketsFee': '全球市场交易费',
   'pages.customer.360.billingModal.otherFees': '其他费用',
+  'pages.customer.360.billingModal.taxFee': '税费',
   'pages.customer.360.billingModal.remarks': '附言',
   'pages.customer.360.billingModal.status': '状态',
   'pages.customer.360.billingModal.actions': '操作',

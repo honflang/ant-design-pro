@@ -1166,6 +1166,7 @@ export default {
   'pages.customer.360.billingModal.tradeFinanceFee': 'Trade Finance Fee',
   'pages.customer.360.billingModal.globalMarketsFee': 'Global Markets Transaction Fee',
   'pages.customer.360.billingModal.otherFees': 'Other Fees',
+  'pages.customer.360.billingModal.taxFee': 'Tax',
   'pages.customer.360.billingModal.remarks': 'Remarks',
   'pages.customer.360.billingModal.status': 'Status',
   'pages.customer.360.billingModal.actions': 'Actions',

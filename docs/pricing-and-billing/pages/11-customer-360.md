@@ -186,6 +186,13 @@ Japan
 Large Corporate
 ```
 
+```text
+Golden Harbour Trading Ltd.
+CUST-000512
+Hong Kong / China
+Corporate
+```
+
 选择客户后打开 Customer 360 Detail Modal，并刷新 Modal 内的 Header、KPI、Tabs 和所有 Mock 数据。关闭详情弹窗后返回客户搜索列表。
 
 ---
@@ -769,15 +776,17 @@ Quick Filters: Last 3 Months / Last 6 Months / Last 12 Months / All
 
 表格字段：
 
-| 账单日期 | 付款截止日期 | 服务周期开始日期 | 服务周期结束日期 | 本期应付款总额 | 币种 | 现金管理费 | 贸易融资费 | 全球市场交易费 | 附言 |
-| -------- | ------------ | ---------------- | ---------------- | -------------- | ---- | ---------- | ---------- | -------------- | ---- |
+| 账单日期 | 付款截止日期 | 服务周期开始日期 | 服务周期结束日期 | 本期应付款总额 | 币种 | 现金管理费 | 贸易融资费 | 全球市场交易费 | 税费 | 附言 |
+| -------- | ------------ | ---------------- | ---------------- | -------------- | ---- | ---------- | ---------- | -------------- | ---- | ---- |
 
-Mock 示例（ABC Global Holdings）：
+**税费** 列展示当前账单的税额及适用税种标签（如 `VAT (6%)` / `GST (9%)` / `Consumption Tax (10%)` / `Hong Kong Tax (0%)`），税种按客户 `Registration Country` 决定；**本期应付款总额** 已包含税费。
+
+Mock 示例（ABC Global Holdings，Registration Country = China，VAT 6%）：
 
 ```text
-2026-08-01    2026-08-15    2026-07-01    2026-07-31    $420,000    USD    $120,000    $180,000    $120,000    Monthly service fee
-2026-07-01    2026-07-15    2026-06-01    2026-06-30    $390,000    USD    $110,000    $170,000    $110,000    Monthly service fee
-2026-06-01    2026-06-15    2026-05-01    2026-05-31    $385,000    USD    $105,000    $175,000    $105,000    Monthly service fee
+2026-08-01    2026-08-15    2026-07-01    2026-07-31    $445,200    USD    $120,000    $180,000    $120,000    $25,200 VAT (6%)    Monthly service fee
+2026-07-01    2026-07-15    2026-06-01    2026-06-30    $413,400    USD    $110,000    $170,000    $110,000    $23,400 VAT (6%)    Monthly service fee
+2026-06-01    2026-06-15    2026-05-01    2026-05-31    $408,100    USD    $105,000    $175,000    $105,000    $23,100 VAT (6%)    Monthly service fee
 ```
 
 操作列：
@@ -817,13 +826,13 @@ FCY_DOMESTIC_CASH_POOL    Commission Fee            2026-07-01    Commission Fee
 
 根据客户 **Registration Country / Operating Markets** 提供不同的固定发票模板：
 
-| 国家/地区 | 模板说明 |
-| --------- | -------- |
-| China     | 中国大陆增值税普通发票模板 |
-| Hong Kong | 香港商业发票模板 |
-| Singapore | 新加坡 Tax Invoice 模板 |
-| Japan     | 日本 請求書模板 |
-| Default   | 国际通用 Invoice 模板 |
+| 国家/地区 | 模板说明 | 税种 / 税率 |
+| --------- | -------- | ----------- |
+| China     | 中国大陆增值税普通发票模板 | VAT 6% |
+| Hong Kong | 香港商业发票模板 | 无税（0%） |
+| Singapore | 新加坡 Tax Invoice 模板 | GST 9% |
+| Japan     | 日本 請求書模板 | Consumption Tax 10% |
+| Default   | 国际通用 Invoice 模板 | Tax 6%（占位税率） |
 
 模板选择规则：
 
@@ -833,7 +842,7 @@ FCY_DOMESTIC_CASH_POOL    Commission Fee            2026-07-01    Commission Fee
 否则使用 Default 模板。
 ```
 
-发票内容为静态模板 + 当前账单数据填充，不连接真实税务或发票系统。
+发票内容为静态模板 + 当前账单数据填充，不连接真实税务或发票系统。发票费用明细中必须单独列出税费行（税种标签 + 税额），并与账单列表中的税费保持一致。
 
 预览必须生成一个可打开的单页 PDF Mock 发票，并包含发票抬头、客户信息、账单日期、服务周期、费用分项、应付总额、状态和 Demo 水印。PDF 只需使用浏览器端或项目已有能力生成，不需要真实 PDF 服务。
 
@@ -1258,6 +1267,8 @@ interface BillingStatement {
   tradeFinanceFee: number;
   globalMarketsTransactionFee: number;
   otherFees?: number;
+  taxAmount: number;
+  taxLabel: string;
   remarks: string;
   status: 'Issued' | 'Paid' | 'Overdue';
   details?: BillingStatementDetail[];
@@ -1300,7 +1311,7 @@ interface ExternalIntelligence {}
 
 # 15. Mock Data
 
-至少实现三个 Customer。
+至少实现四个 Customer（含一个 Hong Kong 客户，用于展示 0% 税率场景）。
 
 ---
 
@@ -1385,6 +1396,34 @@ Core
 Revenue:
 $1.84M
 ```
+
+---
+
+## Customer 4
+
+```text
+Golden Harbour Trading Ltd.
+
+ID:
+CUST-000512
+
+Country:
+Hong Kong / China
+
+Segment:
+Corporate
+
+Risk:
+Low
+
+Value:
+Growth
+
+Revenue:
+HKD 1.26M
+```
+
+用于展示 Hong Kong 客户账单不含税（`Hong Kong Tax (0%)`）的场景，与其他客户的 VAT / GST / Consumption Tax 场景形成对比。
 
 不同 Customer 切换后：
 
