@@ -56,5 +56,6 @@ export default {
   'menu.billing': 'Billing Management',
   'menu.regional': 'Regional Configuration',
   'menu.regional.tax': 'Tax Configuration',
+  'menu.regional.jurisdiction-tax': 'Jurisdiction & Tax Definition',
   'menu.billing.invoice': 'Invoice Management',
 };

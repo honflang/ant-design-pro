@@ -81,6 +81,12 @@ export default [
         path: '/pricing-billing/regional/tax',
         component: './pricing-billing/regional/tax',
       },
+      {
+        name: 'jurisdiction-tax',
+        icon: 'flag',
+        path: '/pricing-billing/regional/jurisdiction-tax',
+        component: './pricing-billing/regional/jurisdiction-tax',
+      },
     ],
   },
   {

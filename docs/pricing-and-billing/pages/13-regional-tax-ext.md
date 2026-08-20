@@ -14,6 +14,8 @@
 
 本次 Demo 暂时**不接真实后端，全部使用 Mock 数据**。
 
+> **与 Jurisdiction & Tax Definition（管辖区与税种定义，见 `16-regional-jurisdiction-tax.md`）的关系**：新增 Tax Rule 时，先从可查询的「Jurisdiction & Tax Definition」主数据列表中选择一条有效的管辖区与税种定义组合，再自动带出 Tax Authority、Currency、Tax Type、Tax Name、Tax Code 和默认 Rate。编辑既有 Tax Rule 时，该组合信息合并展示且不可修改，以确保规则始终关联原始主数据；如需使用另一组合，应新建 Tax Rule。Tax Rule 本身仍然保留 Applicability、Tax Treatment 和生效期等差异化配置，Rate 默认取自 Tax Definition，但允许在具体规则上覆盖。
+
 ---
 
 ## 二、本次需要实现的功能
@@ -74,7 +76,7 @@ Tax Configuration
 
 页面采用 Ant Design Pro 常见的：
 
-> ProCard + ProTable + Drawer / Modal
+> ProCard + ProTable + Modal / Drawer
 
 布局。
 
@@ -174,6 +176,8 @@ Tax Rule 列表至少包含：
 12. Updated At
 13. Actions
 
+Tax Type 和 Tax Name 列应分别预留较宽的固定列宽（建议至少 190px 和 260px）。内容超出列宽时使用省略号截断，鼠标悬停时通过 Tooltip 展示完整内容，避免影响表格横向扫描效率。
+
 Actions：
 
 ```text
@@ -192,26 +196,56 @@ Disable / Enable
 
 > Add Tax Rule
 
-打开 Drawer，而不是跳转新页面。
+从页面右侧打开 Drawer，而不是跳转新页面。
 
-Drawer 中按照业务逻辑分组：
+Drawer 中按照业务逻辑分组。新增和编辑共用右侧 Drawer，但主数据关联的交互不同；当内容超过视口高度时，Drawer 正文区域可纵向滚动，底部操作按钮保持可见。
 
-### 1. Jurisdiction
+Drawer 宽度建议约 `760px`，表单卡片填满可用正文宽度。「Jurisdiction & Tax Definition」分组内，Jurisdiction、Tax Authority、Currency、Tax Type、Tax Name、Tax Code、Default Rate 均以只读的 Descriptions（两列）展示，而非表单输入框；仅 Rate 是可编辑字段，单独占一行。Applicability、Tax Treatment 和 Effective Period 维持两列并排，Status 使用较窄的单列；窄屏下所有字段自动堆叠为单列。
+
+### 1. Jurisdiction & Tax Definition
+
+#### 新增时：选择主数据组合
+
+在本分组最上方提供一个可查询的「Jurisdiction & Tax Definition」列表，而不是两个级联下拉框。列表的每一行代表一个可用的 Tax Definition 及其所属 Jurisdiction，支持单选；仅展示 Jurisdiction 和 Tax Definition 均为 `ACTIVE` 的组合。
+
+列表至少包含：
 
 ```text
-Country / Region
+Jurisdiction
 Tax Authority
 Currency
-```
-
-### 2. Tax Definition
-
-```text
 Tax Type
 Tax Name
 Tax Code
-Rate
+Default Rate
 ```
+
+在 Drawer 内，主数据列表使用紧凑的固定列宽。Jurisdiction、Tax Authority、Tax Type 和 Tax Name 等长文本列在超过列宽时省略显示；列表保留横向滚动（建议最小宽度约 `860px`），以便用户按需查看 Tax Code 和 Default Rate 等完整列，而不会压缩字段内容。
+
+支持按以下条件查询：
+
+```text
+Jurisdiction
+Tax Type
+Keyword（匹配 Tax Name / Tax Code）
+```
+
+用户选中一行后，该行信息以隐藏表单字段回填（用于提交），并在列表下方以只读 Descriptions（两列布局）展示：
+
+```text
+Jurisdiction（加粗）              Currency
+Tax Authority（跨两列）
+Tax Type（彩色 Tag）              Tax Name
+Tax Code（等宽字体）              Default Rate（百分比）
+```
+
+Rate 单独一行，默认取自 Tax Definition 的 Default Rate，可在本条 Tax Rule 上覆盖。
+
+未选中主数据组合前不能提交表单；选中后应回填 Tax Rule 的 `jurisdiction`、`taxAuthority`、`currency`、`taxType`、`taxName`、`taxCode`、`defaultRate` 和 `rate`。
+
+#### 编辑时：锁定主数据组合
+
+编辑既有 Tax Rule 时，不展示主数据选择列表，改为展示一段说明文字，提示「司法管辖区与税务定义关联在创建后不可修改，如需变更请新建税务规则」。其下方展示与新增时相同的只读 Descriptions 区域（Jurisdiction、Tax Authority、Currency、Tax Type、Tax Name、Tax Code、Default Rate），保持新增与编辑两种模式下的展示效果一致。该区域所有字段均不可修改，不允许通过编辑操作变更既有 Tax Rule 的管辖区或税种定义关联；Rate 仍是 Tax Rule 级别的可覆盖字段，保留可编辑能力。
 
 Tax Type 示例：
 
@@ -223,14 +257,11 @@ Consumption Tax
 Other
 ```
 
-### 3. Applicability
+### 2. Applicability
 
 ```text
 Product / Service
-Customer Type
-Customer Tax Status
-Service Location
-Customer Location
+Applicability Description
 ```
 
 例如：
@@ -239,17 +270,11 @@ Customer Location
 Product:
 Cash Management
 
-Customer Type:
-Corporate
-
-Customer Tax Status:
-Taxable
-
-Service Location:
-Singapore
+Applicability Description:
+Taxable Banking Services
 ```
 
-### 4. Tax Treatment
+### 3. Tax Treatment
 
 ```text
 Taxable
@@ -265,14 +290,14 @@ Tax Inclusive
 Tax Exclusive
 ```
 
-### 5. Effective Period
+### 4. Effective Period
 
 ```text
 Effective From
 Effective To
 ```
 
-### 6. Status
+### 5. Status
 
 ```text
 Active
@@ -313,12 +338,6 @@ Rate
 
 Applicability
 Taxable Banking Services
-
-Customer Type
-Corporate
-
-Customer Tax Status
-Taxable
 
 Tax Treatment
 Tax Exclusive
@@ -436,10 +455,6 @@ interface TaxRule {
   taxCode: string;
   productService: string;
   applicability: string;
-  customerType: string;
-  customerTaxStatus: string;
-  serviceLocation: string;
-  customerLocation: string;
   rate: number;
   taxTreatment: string;
   calculationMethod: string;
@@ -452,6 +467,8 @@ interface TaxRule {
 ```
 
 Mock 数据可以放在项目已有的 mock 目录 / mock service 中。
+
+新增 Tax Rule 时，右侧 Drawer 顶部的「Jurisdiction & Tax Definition」查询列表应读取 `mock/jurisdictionTax.ts`（`JurisdictionTaxNode`，见 `16-regional-jurisdiction-tax.md`）暴露的 `/api/regional/jurisdiction-tax/nodes` 数据：先获取 `nodeType=JURISDICTION` 且 `status=ACTIVE` 的 Jurisdiction 节点，再获取其下 `nodeType=TAX_DEFINITION`、`status=ACTIVE` 的 Tax Definition 节点，并组合为列表行。列表查询条件为 Jurisdiction、Tax Type 和 Keyword（Tax Name / Tax Code）。选中一行后，把 Tax Definition 的 `taxType`、`name`（Tax Name）、`code`（Tax Code）和 `defaultRate` 回填到 Tax Rule 表单，`jurisdiction` 字段回填 Jurisdiction 的 `name`，Currency 和 Tax Authority 回填 Jurisdiction 的 `defaultCurrency` 和 `taxAuthority`（仅用于展示，不在 `TaxRule` 中新增字段）。编辑 Tax Rule 时不加载或展示此选择列表，直接依据既有规则信息及对应主数据显示锁定的组合区域。`mock/taxConfig.ts` 中的 `TaxRule` 数据结构保持不变，两个 Mock 数据源之间不做写入同步，仅在新增表单填充时单向读取。
 
 如果项目已有统一的 request / service / mock 机制，优先复用，不要新建另一套架构。
 
@@ -499,11 +516,11 @@ Keyword
 
 ### 新增
 
-Add Tax Rule → Drawer → Submit → Mock 新增 → 列表刷新。
+Add Tax Rule → 右侧 Drawer → Submit → Mock 新增 → 列表刷新。
 
 ### 编辑
 
-Edit → Drawer → 自动填充当前数据 → Submit → Mock 更新 → 列表刷新。
+Edit → 右侧 Drawer → 自动填充当前数据，并以只读的合并区域展示 Jurisdiction & Tax Definition → 修改规则级差异化配置 → Submit → Mock 更新 → 列表刷新。编辑时不得修改 Jurisdiction、Tax Type、Tax Name 或 Tax Code。
 
 ### 查看
 

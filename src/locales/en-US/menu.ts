@@ -73,4 +73,5 @@ export default {
   'menu.reports.analytics': 'Analytics & Reporting',
   'menu.regional': 'Regional Configuration',
   'menu.regional.tax': 'Tax Configuration',
+  'menu.regional.jurisdiction-tax': 'Jurisdiction & Tax Definition',
 };

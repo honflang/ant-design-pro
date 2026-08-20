@@ -25,19 +25,25 @@ import {
   Badge,
   Button,
   Col,
+  Descriptions,
   Divider,
   Drawer,
   Dropdown,
+  Input,
   InputNumber,
   Row,
+  Select,
   Space,
   Statistic,
   Steps,
+  Table,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import type { TaxRule } from '../../../../../mock/taxConfig';
+import type { JurisdictionTaxNode } from '../../../../../mock/jurisdictionTax';
 
 const { Text } = Typography;
 
@@ -51,13 +57,6 @@ const PRODUCTS = [
   'Advisory Services',
   'Lending',
 ];
-const CUSTOMER_TYPES = [
-  'Corporate',
-  'Financial Institution',
-  'Government',
-  'SME',
-];
-const TAX_STATUS_OPTIONS = ['Taxable', 'Exempt', 'Zero Rated', 'Out of Scope'];
 const TAX_TREATMENT_OPTIONS = [
   'Tax Exclusive',
   'Tax Inclusive',
@@ -66,21 +65,53 @@ const TAX_TREATMENT_OPTIONS = [
   'Input Taxed',
   'Out of Scope',
 ];
-const CURRENCY_MAP: Record<string, string> = {
-  Singapore: 'SGD',
-  'Hong Kong': 'HKD',
-  China: 'CNY',
-  Japan: 'JPY',
-  Australia: 'AUD',
+const PRODUCT_MESSAGE_IDS: Record<string, string> = {
+  'Cash Management': 'pages.regional.tax.product.cashManagement',
+  'FX Services': 'pages.regional.tax.product.fxServices',
+  'Trade Finance': 'pages.regional.tax.product.tradeFinance',
+  'Deposit Services': 'pages.regional.tax.product.depositServices',
+  'Advisory Services': 'pages.regional.tax.product.advisoryServices',
+  Lending: 'pages.regional.tax.product.lending',
 };
-const AUTHORITY_MAP: Record<string, string> = {
-  Singapore: 'Inland Revenue Authority of Singapore (IRAS)',
-  'Hong Kong': 'Inland Revenue Department (IRD)',
-  China: 'State Taxation Administration (STA)',
-  Japan: 'National Tax Agency (NTA)',
-  Australia: 'Australian Taxation Office (ATO)',
+const APPLICABILITY_MESSAGE_IDS: Record<string, string> = {
+  'Cross-border Payment to Non-residents':
+    'pages.regional.tax.applicability.crossBorderPayment',
+  'Cross-border Service Payments':
+    'pages.regional.tax.applicability.crossBorderServicePayments',
+  'Cross-border Services': 'pages.regional.tax.applicability.crossBorderServices',
+  'Financial Services - General Exemption':
+    'pages.regional.tax.applicability.financialServicesExemption',
+  'Input Taxed Financial Supplies':
+    'pages.regional.tax.applicability.inputTaxedFinancialSupplies',
+  'Interest Paid to Non-residents':
+    'pages.regional.tax.applicability.interestPaidToNonResidents',
+  'Taxable Banking Services': 'pages.regional.tax.applicability.taxableBankingServices',
+  'Taxable Domestic Services': 'pages.regional.tax.applicability.taxableDomesticServices',
+  'Taxable Financial Services':
+    'pages.regional.tax.applicability.taxableFinancialServices',
+  'Taxable Financial Supplies':
+    'pages.regional.tax.applicability.taxableFinancialSupplies',
+  'Zero Rated Export Services': 'pages.regional.tax.applicability.zeroRatedExportServices',
 };
-
+const TAX_TYPE_MESSAGE_IDS: Record<string, string> = {
+  GST: 'pages.regional.tax.taxType.gst',
+  VAT: 'pages.regional.tax.taxType.vat',
+  WHT: 'pages.regional.tax.taxType.wht',
+  'Consumption Tax': 'pages.regional.tax.taxType.consumptionTax',
+  Other: 'pages.regional.tax.taxType.other',
+};
+const TAX_TREATMENT_MESSAGE_IDS: Record<string, string> = {
+  'Tax Exclusive': 'pages.regional.tax.taxTreatment.taxExclusive',
+  'Tax Inclusive': 'pages.regional.tax.taxTreatment.taxInclusive',
+  'Tax Exempt': 'pages.regional.tax.taxTreatment.taxExempt',
+  'Zero Rated': 'pages.regional.tax.taxTreatment.zeroRated',
+  'Input Taxed': 'pages.regional.tax.taxTreatment.inputTaxed',
+  'Out of Scope': 'pages.regional.tax.taxTreatment.outOfScope',
+};
+const CALCULATION_METHOD_MESSAGE_IDS: Record<string, string> = {
+  ...TAX_TREATMENT_MESSAGE_IDS,
+  Exempt: 'pages.regional.tax.calculationMethod.exempt',
+};
 const taxTypeColor: Record<string, string> = {
   GST: 'blue',
   VAT: 'geekblue',
@@ -108,6 +139,14 @@ const TaxCalcPreview: React.FC<{ rule: TaxRule }> = ({ rule }) => {
 
   const t = (id: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id }, values);
+  const formatTaxType = (value: string) =>
+    TAX_TYPE_MESSAGE_IDS[value] ? t(TAX_TYPE_MESSAGE_IDS[value]) : value;
+  const formatTaxTreatment = (value: string) =>
+    TAX_TREATMENT_MESSAGE_IDS[value] ? t(TAX_TREATMENT_MESSAGE_IDS[value]) : value;
+  const formatCalculationMethod = (value: string) =>
+    CALCULATION_METHOD_MESSAGE_IDS[value]
+      ? t(CALCULATION_METHOD_MESSAGE_IDS[value])
+      : value;
 
   return (
     <ProCard
@@ -147,7 +186,7 @@ const TaxCalcPreview: React.FC<{ rule: TaxRule }> = ({ rule }) => {
         <Col span={6}>
           <Statistic
             title={t('pages.regional.tax.calc.taxType')}
-            value={rule.taxType}
+            value={formatTaxType(rule.taxType)}
             valueStyle={{ fontSize: 18, fontWeight: 600, color: '#1677ff' }}
           />
         </Col>
@@ -185,8 +224,8 @@ const TaxCalcPreview: React.FC<{ rule: TaxRule }> = ({ rule }) => {
       <Divider style={{ margin: '12px 0' }} />
       <Text type="secondary" style={{ fontSize: 11 }}>
         {t('pages.regional.tax.calc.treatmentInfo', {
-          treatment: rule.taxTreatment,
-          method: rule.calculationMethod,
+          treatment: formatTaxTreatment(rule.taxTreatment),
+          method: formatCalculationMethod(rule.calculationMethod),
         })}
         {rule.taxTreatment === 'Tax Inclusive' &&
           t('pages.regional.tax.calc.taxInclusive')}
@@ -268,6 +307,12 @@ const BillingFlowBanner: React.FC = () => {
 // ──────────────────────────────────────────────────────────────────────────────
 // Add / Edit Drawer Form
 // ──────────────────────────────────────────────────────────────────────────────
+interface MasterDefinitionRow {
+  id: string;
+  jurisdiction: JurisdictionTaxNode;
+  taxDefinition: JurisdictionTaxNode;
+}
+
 const TaxRuleForm: React.FC<{
   open: boolean;
   editRecord?: TaxRule;
@@ -278,14 +323,123 @@ const TaxRuleForm: React.FC<{
   const { message } = App.useApp();
   const intl = useIntl();
   const t = (id: string) => intl.formatMessage({ id });
+  const formatTaxType = (value: string) =>
+    TAX_TYPE_MESSAGE_IDS[value] ? t(TAX_TYPE_MESSAGE_IDS[value]) : value;
+  const formatTaxTreatment = (value: string) =>
+    TAX_TREATMENT_MESSAGE_IDS[value] ? t(TAX_TREATMENT_MESSAGE_IDS[value]) : value;
+  const formatCalculationMethod = (value: string) =>
+    CALCULATION_METHOD_MESSAGE_IDS[value]
+      ? t(CALCULATION_METHOD_MESSAGE_IDS[value])
+      : value;
+  const formatProduct = (value: string) =>
+    PRODUCT_MESSAGE_IDS[value] ? t(PRODUCT_MESSAGE_IDS[value]) : value;
+  const formatApplicability = (value: string) =>
+    APPLICABILITY_MESSAGE_IDS[value]
+      ? t(APPLICABILITY_MESSAGE_IDS[value])
+      : value;
+
+  const [masterNodes, setMasterNodes] = useState<JurisdictionTaxNode[]>([]);
+  const [selectedDefinitionId, setSelectedDefinitionId] = useState<string>();
+  const [masterQuery, setMasterQuery] = useState({
+    jurisdiction: '',
+    taxType: '',
+    keyword: '',
+  });
+  const previewValues: Record<string, string> = ProForm.useWatch([], form) ?? {};
+
+  useEffect(() => {
+    if (!open) return;
+    request<{ success: boolean; data: JurisdictionTaxNode[] }>(
+      '/api/regional/jurisdiction-tax/nodes',
+      { params: { status: 'ACTIVE' } },
+    ).then((res) => setMasterNodes(res.data ?? []));
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    setMasterQuery({ jurisdiction: '', taxType: '', keyword: '' });
+    setSelectedDefinitionId(undefined);
+    form.resetFields();
+
+    if (!editRecord) {
+      form.setFieldsValue({ status: 'ACTIVE' });
+      return;
+    }
+
+    const jurisdictionNode = masterNodes.find(
+      (node) => node.nodeType === 'JURISDICTION' && node.name === editRecord.jurisdiction,
+    );
+    const taxDefinitionNode = jurisdictionNode
+      ? masterNodes.find(
+          (node) =>
+            node.parentId === jurisdictionNode.id && node.taxType === editRecord.taxType,
+        )
+      : undefined;
+    form.setFieldsValue({
+      ...editRecord,
+      taxDefinitionId: taxDefinitionNode?.id,
+      defaultRate: taxDefinitionNode?.defaultRate ?? editRecord.rate,
+    });
+  }, [open, editRecord, masterNodes, form]);
+
+  const masterDefinitionRows = masterNodes
+    .filter((node) => node.nodeType === 'TAX_DEFINITION' && node.status === 'ACTIVE')
+    .flatMap((taxDefinition) => {
+      const jurisdiction = masterNodes.find(
+        (node) =>
+          node.id === taxDefinition.parentId &&
+          node.nodeType === 'JURISDICTION' &&
+          node.status === 'ACTIVE',
+      );
+      return jurisdiction ? [{ id: taxDefinition.id, jurisdiction, taxDefinition }] : [];
+    });
+  const filteredMasterDefinitionRows = masterDefinitionRows.filter((row) => {
+    const keyword = masterQuery.keyword.trim().toLowerCase();
+    return (
+      (!masterQuery.jurisdiction || row.jurisdiction.id === masterQuery.jurisdiction) &&
+      (!masterQuery.taxType || row.taxDefinition.taxType === masterQuery.taxType) &&
+      (!keyword ||
+        [row.taxDefinition.name, row.taxDefinition.code].some((value) =>
+          value.toLowerCase().includes(keyword),
+        ))
+    );
+  });
+  const jurisdictionOptions = masterNodes
+    .filter((node) => node.nodeType === 'JURISDICTION' && node.status === 'ACTIVE')
+    .map((node) => ({ label: node.name, value: node.id }));
+  const availableTaxTypes = [...new Set(masterDefinitionRows.map((row) => row.taxDefinition.taxType))];
+
+  const handleMasterDataSelection = (row: MasterDefinitionRow) => {
+    const { jurisdiction, taxDefinition } = row;
+    setSelectedDefinitionId(taxDefinition.id);
+    form.setFieldsValue({
+      jurisdiction: jurisdiction.name,
+      taxAuthority: jurisdiction.taxAuthority ?? '',
+      currency: jurisdiction.defaultCurrency ?? '',
+      taxDefinitionId: taxDefinition.id,
+      taxType: taxDefinition.taxType ?? '',
+      taxName: taxDefinition.name,
+      taxCode: taxDefinition.code,
+      defaultRate: taxDefinition.defaultRate ?? 0,
+      rate: taxDefinition.defaultRate ?? 0,
+    });
+  };
 
   const handleFinish = async (values: Record<string, unknown>) => {
     try {
-      const jurisdiction = values.jurisdiction as string;
+      const selectedRow = masterDefinitionRows.find(
+        (row) => row.id === values.taxDefinitionId,
+      );
+      const { defaultRate: _defaultRate, taxDefinitionId: _taxDefinitionId, ...rest } = values;
       const payload = {
-        ...values,
-        currency: CURRENCY_MAP[jurisdiction] ?? 'USD',
-        taxAuthority: AUTHORITY_MAP[jurisdiction] ?? '',
+        ...rest,
+        jurisdiction: rest.jurisdiction ?? selectedRow?.jurisdiction.name ?? '',
+        taxAuthority:
+          rest.taxAuthority ?? selectedRow?.jurisdiction.taxAuthority ?? '',
+        currency: rest.currency ?? selectedRow?.jurisdiction.defaultCurrency ?? '',
+        taxType: rest.taxType ?? selectedRow?.taxDefinition.taxType ?? '',
+        taxName: rest.taxName ?? selectedRow?.taxDefinition.name ?? '',
+        taxCode: rest.taxCode ?? selectedRow?.taxDefinition.code ?? '',
         status: values.status ?? 'ACTIVE',
       };
 
@@ -319,88 +473,199 @@ const TaxRuleForm: React.FC<{
             : t('pages.regional.tax.form.addTitle')}
         </Space>
       }
-      width={680}
+      placement="right"
+      size={760}
       open={open}
       onClose={onClose}
-      destroyOnClose
-      footer={null}
+      destroyOnHidden
+      footer={
+        <Space>
+          <Button onClick={onClose}>{t('pages.regional.tax.form.cancel')}</Button>
+          <Button type="primary" onClick={() => form.submit()}>
+            {editRecord
+              ? t('pages.regional.tax.form.save')
+              : t('pages.regional.tax.form.create')}
+          </Button>
+        </Space>
+      }
+      styles={{ body: { paddingBottom: 24 } }}
     >
       <ProForm
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        initialValues={editRecord}
-        submitter={{
-          searchConfig: {
-            submitText: editRecord
-              ? t('pages.regional.tax.form.save')
-              : t('pages.regional.tax.form.create'),
-          },
-          render: (_, doms) => (
-            <Space style={{ float: 'right' }}>
-              <Button onClick={onClose}>
-                {t('pages.regional.tax.form.cancel')}
-              </Button>
-              {doms[1]}
-            </Space>
-          ),
-        }}
+        submitter={false}
       >
         <ProCard
-          title={t('pages.regional.tax.form.section.jurisdiction')}
-          style={{ marginBottom: 16, border: '1px solid #f0f0f0' }}
+          title={t('pages.regional.tax.form.section.masterData')}
+          style={{
+            border: '1px solid #f0f0f0',
+            marginBottom: 16,
+          }}
         >
+          {!editRecord && (
+            <>
+              <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+                {t('pages.regional.tax.form.masterData.description')}
+              </Text>
+              <Row gutter={[12, 12]} style={{ marginBottom: 12 }}>
+                <Col xs={24} sm={8}>
+                  <Select
+                    allowClear
+                    value={masterQuery.jurisdiction || undefined}
+                    placeholder={t('pages.regional.tax.form.masterData.jurisdiction')}
+                    options={jurisdictionOptions}
+                    onChange={(jurisdiction) =>
+                      setMasterQuery((query) => ({ ...query, jurisdiction: jurisdiction ?? '' }))
+                    }
+                    style={{ width: '100%' }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Select
+                    allowClear
+                    value={masterQuery.taxType || undefined}
+                    placeholder={t('pages.regional.tax.form.masterData.taxType')}
+                    options={availableTaxTypes.map((taxType) => ({
+                      label: formatTaxType(taxType ?? ''),
+                      value: taxType,
+                    }))}
+                    onChange={(taxType) =>
+                      setMasterQuery((query) => ({ ...query, taxType: taxType ?? '' }))
+                    }
+                    style={{ width: '100%' }}
+                  />
+                </Col>
+                <Col xs={24} sm={8}>
+                  <Input
+                    allowClear
+                    value={masterQuery.keyword}
+                    placeholder={t('pages.regional.tax.form.masterData.keyword')}
+                    onChange={(event) =>
+                      setMasterQuery((query) => ({ ...query, keyword: event.target.value }))
+                    }
+                  />
+                </Col>
+              </Row>
+              <Table<MasterDefinitionRow>
+                rowKey="id"
+                size="small"
+                pagination={{ pageSize: 5, size: 'small', showSizeChanger: false }}
+                scroll={{ x: 860 }}
+                tableLayout="fixed"
+                dataSource={filteredMasterDefinitionRows}
+                rowSelection={{
+                  type: 'radio',
+                  selectedRowKeys: selectedDefinitionId ? [selectedDefinitionId] : [],
+                  onChange: (_, rows) => {
+                    if (rows[0]) handleMasterDataSelection(rows[0]);
+                  },
+                }}
+                onRow={(row) => ({ onClick: () => handleMasterDataSelection(row) })}
+                columns={[
+                  {
+                    title: t('pages.regional.tax.form.masterData.jurisdiction'),
+                    render: (_, row) => (
+                      <Text strong>{row.jurisdiction.name}</Text>
+                    ),
+                    width: 110,
+                    ellipsis: true,
+                  },
+                  {
+                    title: t('pages.regional.tax.form.taxAuthority'),
+                    render: (_, row) => row.jurisdiction.taxAuthority ?? '',
+                    width: 180,
+                    ellipsis: true,
+                  },
+                  {
+                    title: t('pages.regional.tax.form.currency'),
+                    render: (_, row) => row.jurisdiction.defaultCurrency,
+                    width: 90,
+                  },
+                  {
+                    title: t('pages.regional.tax.form.taxType'),
+                    render: (_, row) => formatTaxType(row.taxDefinition.taxType ?? ''),
+                    width: 120,
+                    ellipsis: true,
+                  },
+                  {
+                    title: t('pages.regional.tax.form.taxName'),
+                    render: (_, row) => row.taxDefinition.name,
+                    width: 160,
+                    ellipsis: true,
+                  },
+                  {
+                    title: t('pages.regional.tax.form.taxCode'),
+                    render: (_, row) => row.taxDefinition.code,
+                    width: 110,
+                  },
+                  {
+                    title: t('pages.regional.tax.form.defaultRate'),
+                    render: (_, row) => `${row.taxDefinition.defaultRate ?? 0}%`,
+                    width: 90,
+                  },
+                ]}
+              />
+              <ProFormText
+                name="taxDefinitionId"
+                hidden
+                rules={[{ required: true, message: t('pages.regional.tax.form.masterData.required') }]}
+              />
+              <Divider style={{ margin: '16px 0' }} />
+            </>
+          )}
+          {editRecord && (
+            <Text type="secondary" style={{ display: 'block', marginBottom: 12 }}>
+              {t('pages.regional.tax.form.masterData.readonlyDescription')}
+            </Text>
+          )}
+          <ProFormText name="jurisdiction" hidden />
+          <ProFormText name="taxAuthority" hidden />
+          <ProFormText name="currency" hidden />
+          <ProFormText name="taxType" hidden />
+          <ProFormText name="taxName" hidden />
+          <ProFormText name="taxCode" hidden />
+          <ProFormText name="defaultRate" hidden />
+          <Descriptions column={2} size="small" style={{ marginBottom: 16 }}>
+            <Descriptions.Item label={t('pages.regional.tax.form.country')}>
+              <Text strong>{previewValues.jurisdiction || '-'}</Text>
+            </Descriptions.Item>
+            <Descriptions.Item label={t('pages.regional.tax.form.currency')}>
+              {previewValues.currency || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item
+              label={t('pages.regional.tax.form.taxAuthority')}
+              span={2}
+            >
+              {previewValues.taxAuthority || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('pages.regional.tax.form.taxType')}>
+              {previewValues.taxType ? (
+                <Tag color={taxTypeColor[previewValues.taxType] ?? 'default'}>
+                  {formatTaxType(previewValues.taxType)}
+                </Tag>
+              ) : (
+                '-'
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('pages.regional.tax.form.taxName')}>
+              {previewValues.taxName || '-'}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('pages.regional.tax.form.taxCode')}>
+              {previewValues.taxCode ? (
+                <Text code>{previewValues.taxCode}</Text>
+              ) : (
+                '-'
+              )}
+            </Descriptions.Item>
+            <Descriptions.Item label={t('pages.regional.tax.form.defaultRate')}>
+              {previewValues.defaultRate !== undefined && previewValues.defaultRate !== ''
+                ? `${previewValues.defaultRate}%`
+                : '-'}
+            </Descriptions.Item>
+          </Descriptions>
           <Row gutter={16}>
-            <Col span={12}>
-              <ProFormSelect
-                name="jurisdiction"
-                label={t('pages.regional.tax.form.country')}
-                options={JURISDICTIONS.map((j) => ({ label: j, value: j }))}
-                rules={[{ required: true }]}
-                placeholder={t('pages.regional.tax.form.selectJurisdiction')}
-              />
-            </Col>
-            <Col span={12}>
-              <ProFormText
-                name="taxAuthority"
-                label={t('pages.regional.tax.form.taxAuthority')}
-                placeholder={t(
-                  'pages.regional.tax.form.taxAuthorityPlaceholder',
-                )}
-              />
-            </Col>
-          </Row>
-        </ProCard>
-
-        <ProCard
-          title={t('pages.regional.tax.form.section.definition')}
-          style={{ marginBottom: 16, border: '1px solid #f0f0f0' }}
-        >
-          <Row gutter={16}>
-            <Col span={12}>
-              <ProFormSelect
-                name="taxType"
-                label={t('pages.regional.tax.form.taxType')}
-                options={TAX_TYPES.map((ty) => ({ label: ty, value: ty }))}
-                rules={[{ required: true }]}
-              />
-            </Col>
-            <Col span={12}>
-              <ProFormText
-                name="taxName"
-                label={t('pages.regional.tax.form.taxName')}
-                rules={[{ required: true }]}
-              />
-            </Col>
-            <Col span={12}>
-              <ProFormText
-                name="taxCode"
-                label={t('pages.regional.tax.form.taxCode')}
-                rules={[{ required: true }]}
-                placeholder={t('pages.regional.tax.form.taxCodePlaceholder')}
-              />
-            </Col>
-            <Col span={12}>
+            <Col xs={24} md={8}>
               <ProForm.Item
                 name="rate"
                 label={t('pages.regional.tax.form.rate')}
@@ -425,51 +690,28 @@ const TaxRuleForm: React.FC<{
 
         <ProCard
           title={t('pages.regional.tax.form.section.applicability')}
-          style={{ marginBottom: 16, border: '1px solid #f0f0f0' }}
+          style={{
+            border: '1px solid #f0f0f0',
+            marginBottom: 16,
+          }}
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <ProFormSelect
                 name="productService"
                 label={t('pages.regional.tax.form.productService')}
-                options={PRODUCTS.map((p) => ({ label: p, value: p }))}
+                options={PRODUCTS.map((product) => ({
+                  label: formatProduct(product),
+                  value: product,
+                }))}
                 rules={[{ required: true }]}
               />
             </Col>
-            <Col span={12}>
-              <ProFormSelect
-                name="customerType"
-                label={t('pages.regional.tax.form.customerType')}
-                options={CUSTOMER_TYPES.map((c) => ({ label: c, value: c }))}
-              />
-            </Col>
-            <Col span={12}>
-              <ProFormSelect
-                name="customerTaxStatus"
-                label={t('pages.regional.tax.form.customerTaxStatus')}
-                options={TAX_STATUS_OPTIONS.map((s) => ({
-                  label: s,
-                  value: s,
-                }))}
-              />
-            </Col>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <ProFormText
                 name="applicability"
                 label={t('pages.regional.tax.form.applicabilityDesc')}
                 rules={[{ required: true }]}
-              />
-            </Col>
-            <Col span={12}>
-              <ProFormText
-                name="serviceLocation"
-                label={t('pages.regional.tax.form.serviceLocation')}
-              />
-            </Col>
-            <Col span={12}>
-              <ProFormText
-                name="customerLocation"
-                label={t('pages.regional.tax.form.customerLocation')}
               />
             </Col>
           </Row>
@@ -477,26 +719,29 @@ const TaxRuleForm: React.FC<{
 
         <ProCard
           title={t('pages.regional.tax.form.section.treatment')}
-          style={{ marginBottom: 16, border: '1px solid #f0f0f0' }}
+          style={{
+            border: '1px solid #f0f0f0',
+            marginBottom: 16,
+          }}
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <ProFormSelect
                 name="taxTreatment"
                 label={t('pages.regional.tax.form.taxTreatment')}
                 options={TAX_TREATMENT_OPTIONS.map((o) => ({
-                  label: o,
+                  label: formatTaxTreatment(o),
                   value: o,
                 }))}
                 rules={[{ required: true }]}
               />
             </Col>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <ProFormSelect
                 name="calculationMethod"
                 label={t('pages.regional.tax.form.calculationMethod')}
                 options={TAX_TREATMENT_OPTIONS.map((o) => ({
-                  label: o,
+                  label: formatCalculationMethod(o),
                   value: o,
                 }))}
                 rules={[{ required: true }]}
@@ -507,10 +752,13 @@ const TaxRuleForm: React.FC<{
 
         <ProCard
           title={t('pages.regional.tax.form.section.period')}
-          style={{ marginBottom: 16, border: '1px solid #f0f0f0' }}
+          style={{
+            border: '1px solid #f0f0f0',
+            marginBottom: 16,
+          }}
         >
           <Row gutter={16}>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <ProFormDatePicker
                 name="effectiveFrom"
                 label={t('pages.regional.tax.form.effectiveFrom')}
@@ -518,7 +766,7 @@ const TaxRuleForm: React.FC<{
                 style={{ width: '100%' }}
               />
             </Col>
-            <Col span={12}>
+            <Col xs={24} md={12}>
               <ProFormDatePicker
                 name="effectiveTo"
                 label={t('pages.regional.tax.form.effectiveTo')}
@@ -532,19 +780,23 @@ const TaxRuleForm: React.FC<{
           title={t('pages.regional.tax.form.section.status')}
           style={{ border: '1px solid #f0f0f0' }}
         >
-          <ProFormSelect
-            name="status"
-            label={t('pages.regional.tax.form.ruleStatus')}
-            initialValue="ACTIVE"
-            options={[
-              { label: t('pages.regional.tax.status.active'), value: 'ACTIVE' },
-              {
-                label: t('pages.regional.tax.status.inactive'),
-                value: 'INACTIVE',
-              },
-            ]}
-            rules={[{ required: true }]}
-          />
+          <Row gutter={16}>
+            <Col xs={24} md={8}>
+              <ProFormSelect
+                name="status"
+                label={t('pages.regional.tax.form.ruleStatus')}
+                initialValue="ACTIVE"
+                options={[
+                  { label: t('pages.regional.tax.status.active'), value: 'ACTIVE' },
+                  {
+                    label: t('pages.regional.tax.status.inactive'),
+                    value: 'INACTIVE',
+                  },
+                ]}
+                rules={[{ required: true }]}
+              />
+            </Col>
+          </Row>
         </ProCard>
       </ProForm>
     </Drawer>
@@ -560,6 +812,16 @@ const TaxConfigPage: React.FC = () => {
   const intl = useIntl();
   const t = (id: string, values?: Record<string, string | number>) =>
     intl.formatMessage({ id }, values);
+  const formatTaxType = (value: string) =>
+    TAX_TYPE_MESSAGE_IDS[value] ? t(TAX_TYPE_MESSAGE_IDS[value]) : value;
+  const formatTaxTreatment = (value: string) =>
+    TAX_TREATMENT_MESSAGE_IDS[value] ? t(TAX_TREATMENT_MESSAGE_IDS[value]) : value;
+  const formatProduct = (value: string) =>
+    PRODUCT_MESSAGE_IDS[value] ? t(PRODUCT_MESSAGE_IDS[value]) : value;
+  const formatApplicability = (value: string) =>
+    APPLICABILITY_MESSAGE_IDS[value]
+      ? t(APPLICABILITY_MESSAGE_IDS[value])
+      : value;
 
   const [allRules, setAllRules] = useState<TaxRule[]>([]);
   const [formOpen, setFormOpen] = useState(false);
@@ -655,35 +917,62 @@ const TaxConfigPage: React.FC = () => {
           </Text>
         </Space>
       ),
-      filters: JURISDICTIONS.map((j) => ({ text: j, value: j })),
+      filters: JURISDICTIONS.map((jurisdiction) => ({
+        text: jurisdiction,
+        value: jurisdiction,
+      })),
       onFilter: (value, record) => record.jurisdiction === value,
     },
     {
       title: t('pages.regional.tax.col.taxType'),
       dataIndex: 'taxType',
-      width: 130,
+      width: 190,
+      ellipsis: true,
       render: (_, r) => (
-        <Tag color={taxTypeColor[r.taxType] ?? 'default'}>{r.taxType}</Tag>
+        <Tooltip title={formatTaxType(r.taxType)}>
+          <Tag
+            color={taxTypeColor[r.taxType] ?? 'default'}
+            style={{
+              display: 'block',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {formatTaxType(r.taxType)}
+          </Tag>
+        </Tooltip>
       ),
-      filters: TAX_TYPES.map((ty) => ({ text: ty, value: ty })),
+      filters: TAX_TYPES.map((ty) => ({ text: formatTaxType(ty), value: ty })),
       onFilter: (value, record) => record.taxType === value,
     },
     {
       title: t('pages.regional.tax.col.taxName'),
       dataIndex: 'taxName',
+      width: 260,
       ellipsis: true,
       render: (_, r) => (
-        <Button
-          type="link"
-          size="small"
-          style={{ padding: 0 }}
-          onClick={() => {
-            setDetailRecord(r);
-            setDetailOpen(true);
-          }}
-        >
-          {r.taxName}
-        </Button>
+        <Tooltip title={r.taxName}>
+          <Button
+            type="link"
+            size="small"
+            style={{
+              display: 'block',
+              overflow: 'hidden',
+              padding: 0,
+              textAlign: 'left',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              width: '100%',
+            }}
+            onClick={() => {
+              setDetailRecord(r);
+              setDetailOpen(true);
+            }}
+          >
+            {r.taxName}
+          </Button>
+        </Tooltip>
       ),
     },
     {
@@ -691,12 +980,14 @@ const TaxConfigPage: React.FC = () => {
       dataIndex: 'productService',
       width: 150,
       ellipsis: true,
+      render: (_, r) => formatProduct(r.productService),
     },
     {
       title: t('pages.regional.tax.col.applicability'),
       dataIndex: 'applicability',
       width: 200,
       ellipsis: true,
+      render: (_, r) => formatApplicability(r.applicability),
     },
     {
       title: t('pages.regional.tax.col.rate'),
@@ -715,6 +1006,7 @@ const TaxConfigPage: React.FC = () => {
       dataIndex: 'taxTreatment',
       width: 140,
       ellipsis: true,
+      render: (_, r) => formatTaxTreatment(r.taxTreatment),
     },
     {
       title: t('pages.regional.tax.col.effectiveFrom'),
@@ -1023,9 +1315,9 @@ const TaxConfigPage: React.FC = () => {
                   title: t('pages.regional.tax.col.taxType'),
                   dataIndex: 'taxType',
                   render: (_, r) => (
-                    <Tag color={taxTypeColor[r.taxType] ?? 'default'}>
-                      {r.taxType}
-                    </Tag>
+                            <Tag color={taxTypeColor[r.taxType] ?? 'default'}>
+                              {formatTaxType(r.taxType)}
+                            </Tag>
                   ),
                 },
                 {
@@ -1050,34 +1342,23 @@ const TaxConfigPage: React.FC = () => {
                   title: t('pages.regional.tax.col.applicability'),
                   dataIndex: 'applicability',
                   span: 2,
+                  render: (_, r) => formatApplicability(r.applicability),
                 },
                 {
                   title: t('pages.regional.tax.col.productService'),
                   dataIndex: 'productService',
-                },
-                {
-                  title: t('pages.regional.tax.form.customerType'),
-                  dataIndex: 'customerType',
-                },
-                {
-                  title: t('pages.regional.tax.form.customerTaxStatus'),
-                  dataIndex: 'customerTaxStatus',
-                },
-                {
-                  title: t('pages.regional.tax.form.serviceLocation'),
-                  dataIndex: 'serviceLocation',
-                },
-                {
-                  title: t('pages.regional.tax.form.customerLocation'),
-                  dataIndex: 'customerLocation',
+                  render: (_, r) => formatProduct(r.productService),
                 },
                 {
                   title: t('pages.regional.tax.col.taxTreatment'),
                   dataIndex: 'taxTreatment',
+                  render: (_, r) => formatTaxTreatment(r.taxTreatment),
                 },
                 {
                   title: t('pages.regional.tax.detail.calculationMethod'),
                   dataIndex: 'calculationMethod',
+                  render: (_, r) =>
+                    t(CALCULATION_METHOD_MESSAGE_IDS[r.calculationMethod] ?? r.calculationMethod),
                 },
                 {
                   title: t('pages.regional.tax.col.effectiveFrom'),

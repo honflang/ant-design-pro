@@ -73,4 +73,5 @@ export default {
   'menu.reports.analytics': '分析报表',
   'menu.regional': '区域配置',
   'menu.regional.tax': '税务配置',
+  'menu.regional.jurisdiction-tax': '管辖区与税种定义',
 };

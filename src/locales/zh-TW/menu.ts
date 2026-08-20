@@ -55,5 +55,6 @@ export default {
   'menu.billing': '計費管理',
   'menu.regional': '區域配置',
   'menu.regional.tax': '稅務配置',
+  'menu.regional.jurisdiction-tax': '管轄區與稅種定義',
   'menu.billing.invoice': '發票管理',
 };
